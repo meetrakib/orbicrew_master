@@ -228,6 +228,35 @@ Newest entries at the **top**.
 
 ---
 
+---
+
+## 2026-08-07 — Brand logos added to master resources
+
+**Agent / operator:** Cursor agent  
+**Phase:** Workspace assets (pre–Phase 0)  
+**Scope:** Commit Orbicrew light/dark logo and icon assets under `resources/logos/`.
+
+### Done
+- Added light/dark wordmark SVGs and icon SVG/PNG pairs to `resources/logos/`.
+- Updated `resources/README.md` so the logos inventory is accurate (folder no longer empty).
+
+### Decisions / assumptions
+- Logos live in master-only `resources/`; apps copy assets in — no nested-repo path coupling.
+
+### Manual tests run
+- None (static assets).
+
+### Next recommended work
+1. Begin Phase 0.1 when ready: Docker Compose skeleton + health endpoints (unchanged).
+2. Copy logos into `orbicrew-web` / `orbicrew-admin` when scaffolding branded UI.
+
+### Files / repos touched
+- `resources/logos/*` (SVGs/PNGs; not `.DS_Store`)
+- `resources/README.md`
+- `docs/development/development-tracker.md`
+
+---
+
 ## Template for future entries
 
 ```markdown

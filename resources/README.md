@@ -6,9 +6,18 @@ Tracked in the **master** workspace only. Nested org repos must not assume this 
 
 | Path | Purpose |
 |---|---|
-| `resources/logos/` | Brand logos for Orbicrew / Leangine (add files here as they become available) |
+| `resources/logos/` | Brand logos: light/dark wordmarks (`light-logo.svg`, `dark-logo.svg`) and icons (`light-icon.svg`/`png`, `dark-icon.svg`/`png`) |
 | `resources/stitch_orbicrew_ui_ux_guide/` | Stitch UI/UX exports for Standard Dashboard screens |
 | `resources/orbicrew_dev_infra/` | Lean Docker Compose for shared local dependencies (Postgres+pgvector, Redis) |
+
+### Logos
+
+Tracked under `resources/logos/`:
+
+- `light-logo.svg`, `dark-logo.svg` — wordmarks
+- `light-icon.svg`, `light-icon.png`, `dark-icon.svg`, `dark-icon.png` — app/mark icons
+
+Copy into `orbicrew-web` / `orbicrew-admin` as needed; do not depend on this path from nested repos.
 
 ### Stitch guide screens
 

@@ -40,12 +40,12 @@ Living engineering plan for this workspace. Derived from product docs under `doc
 
 | Task | Detail | Status |
 |---|---|---|
-| Master git + ignores | Root git; ignore `local/`, `repos/*` contents, secrets | In progress this session |
-| Agent instructions | `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, bootstrap | In progress |
-| Process docs | This plan, tracker, manual test guide | In progress |
-| Scaffold org repos | `orbicrew-web`, `orbicrew-api`, `orbicrew-channels`, `orbicrew-infra` with `main`/`stage`/`dev` | In progress |
+| Master git + ignores | Root git; ignore `local/`, `repos/*` contents, secrets | Done (commit `d20b7a2`, no remote) |
+| Agent instructions | `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, bootstrap | Done |
+| Process docs | This plan, tracker, manual test guide | Done |
+| Scaffold org repos | `orbicrew-web`, `orbicrew-api`, `orbicrew-channels`, `orbicrew-infra` with `main`/`stage`/`dev` | Done (local only; no remotes) |
 
-**Exit criteria:** a new agent can read `AGENT_BOOTSTRAP.md` and know where to work without a human re-briefing the product.
+**Exit criteria:** a new agent can read `AGENT_BOOTSTRAP.md` and know where to work without a human re-briefing the product. **Met for local workspace.** Remaining user action: create org GitHub repos and attach remotes.
 
 ---
 

@@ -25,8 +25,8 @@ Newest entries at the **top**.
   - Root `.gitignore` (ignores `local/`, `repos/*` contents keeping README/.gitkeep, secrets, deps)
   - `.cursorignore` / `.claudeignore` (ignore `.env*`; do **not** ignore `local/`, `docs/`, `repos/`)
   - `README.md`, `AGENTS.md`, `CLAUDE.md`
-  - `.cursor/rules/*.mdc`, `.claude/settings.json`
-  - Git init + initial commit (no remote push)
+  - `.cursor/rules/*.mdc`, `.claude/settings.json` (denies agent RW under `local/`)
+  - Git init on `main` + initial commit `d20b7a2` — **not pushed** (no remote)
 - Scaffolded nested repos under `repos/` with README + language-appropriate `.gitignore`, branches `main` / `stage` / `dev`, initial commits, **no remotes**:
   - `orbicrew-web` — Next.js/React frontend
   - `orbicrew-api` — FastAPI/LangGraph backend + workers
@@ -41,7 +41,10 @@ Newest entries at the **top**.
 
 ### Manual tests run
 
-- Workspace smoke checks W1–W4 (see manual-test-guide) after scaffolding.
+- W1: `local/` ignored by master git — pass
+- W2: nested `repos/orbicrew-*` contents ignored; `repos/README.md` + `repos/.gitkeep` tracked — pass
+- W3: agent docs present — pass
+- W4: each nested repo has `main` / `stage` / `dev` — pass
 
 ### Next recommended work
 

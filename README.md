@@ -30,8 +30,8 @@ orbicrew_development/          ← this repo (personal GitHub)
 
 | Location | GitHub | Purpose |
 |---|---|---|
-| Workspace root (this repo) | **Personal** | Docs, agent config, development process |
-| `repos/*` | **Org** (Orbicrew / Leangine) | Product services and infra |
+| Workspace root (this repo) | **Personal** — [meetrakib/orbicrew_master](https://github.com/meetrakib/orbicrew_master) | Docs, agent config, development process |
+| `repos/*` | **Org** — [leangine](https://github.com/leangine) | Product services and infra |
 
 Nested repo contents under `repos/` are **not** committed to the master repo. Only `repos/README.md` (and optionally `.gitkeep`) is tracked so the folder exists when you clone.
 
@@ -55,25 +55,33 @@ Each project under `repos/` uses three long-lived branches:
 
 Work feature branches off `dev` unless a change is explicitly stage/prod-only.
 
+## Repository URLs
+
+| Repo | GitHub | Local path |
+|---|---|---|
+| Master workspace (personal) | https://github.com/meetrakib/orbicrew_master | workspace root |
+| `orbicrew-web` | https://github.com/leangine/orbicrew-web | `repos/orbicrew-web` |
+| `orbicrew-api` | https://github.com/leangine/orbicrew-api | `repos/orbicrew-api` |
+| `orbicrew-channels` | https://github.com/leangine/orbicrew-channels | `repos/orbicrew-channels` |
+| `orbicrew-infra` | https://github.com/leangine/orbicrew-infra | `repos/orbicrew-infra` |
+
 ## Quick start for a new machine
 
 ```bash
 # 1. Clone master workspace (personal)
-git clone <your-personal-remote-url> orbicrew_development
+git clone https://github.com/meetrakib/orbicrew_master.git orbicrew_development
 cd orbicrew_development
 
-# 2. Clone org repos into repos/ (after org remotes exist)
+# 2. Clone org repos into repos/
 cd repos
-git clone <org>/orbicrew-web.git
-git clone <org>/orbicrew-api.git
-git clone <org>/orbicrew-channels.git
-git clone <org>/orbicrew-infra.git
+git clone https://github.com/leangine/orbicrew-web.git
+git clone https://github.com/leangine/orbicrew-api.git
+git clone https://github.com/leangine/orbicrew-channels.git
+git clone https://github.com/leangine/orbicrew-infra.git
 cd ..
 
 # 3. Open in Cursor / Claude Code and follow AGENT_BOOTSTRAP.md
 ```
-
-Until org remotes exist, local scaffolding under `repos/` may already be initialized with `main` / `stage` / `dev` — connect remotes and push when GitHub org repos are ready.
 
 ## What not to do
 

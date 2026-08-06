@@ -25,7 +25,7 @@ Canonical docs: `docs/leangine-office-docs/` — start at `tech/00_INDEX.md` and
 | `repos/` | Nested org project git repos | Implement features here |
 | `local/` | Private scratch / personal materials | **Do not read unless the user explicitly asks** |
 
-**Git ownership:** master workspace = user's **personal** GitHub. Nested `repos/*` = **org** GitHub. Do not commit nested repo contents into the master repo.
+**Git ownership:** master workspace = personal GitHub ([meetrakib/orbicrew_master](https://github.com/meetrakib/orbicrew_master)). Nested `repos/*` = Leangine org GitHub. Do not commit nested repo contents into the master repo.
 
 ---
 
@@ -42,12 +42,12 @@ Do **not** build product features in the workspace root — only docs, agent con
 
 ## Nested repos
 
-| Repo | Path | Stack (intent) | Owns |
-|---|---|---|---|
-| `orbicrew-web` | `repos/orbicrew-web` | Next.js, React, TypeScript | Standard Dashboard, auth session UI, Orbit View chrome + Phaser world |
-| `orbicrew-api` | `repos/orbicrew-api` | Python, FastAPI, LangGraph | Orchestration, router, budget guard, DB, billing, workers |
-| `orbicrew-channels` | `repos/orbicrew-channels` | TypeScript or Python (TBD) | Thin Telegram / Discord / WhatsApp adapters |
-| `orbicrew-infra` | `repos/orbicrew-infra` | Docker Compose, scripts | Local stack, deploy topology, shared CI/ops templates |
+| Repo | GitHub | Path | Stack (intent) | Owns |
+|---|---|---|---|---|
+| `orbicrew-web` | https://github.com/leangine/orbicrew-web | `repos/orbicrew-web` | Next.js, React, TypeScript | Standard Dashboard, auth session UI, Orbit View chrome + Phaser world |
+| `orbicrew-api` | https://github.com/leangine/orbicrew-api | `repos/orbicrew-api` | Python, FastAPI, LangGraph | Orchestration, router, budget guard, DB, billing, workers |
+| `orbicrew-channels` | https://github.com/leangine/orbicrew-channels | `repos/orbicrew-channels` | TypeScript or Python (TBD) | Thin Telegram / Discord / WhatsApp adapters |
+| `orbicrew-infra` | https://github.com/leangine/orbicrew-infra | `repos/orbicrew-infra` | Docker Compose, scripts | Local stack, deploy topology, shared CI/ops templates |
 
 When editing a nested repo:
 

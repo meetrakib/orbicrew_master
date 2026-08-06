@@ -40,12 +40,12 @@ Living engineering plan for this workspace. Derived from product docs under `doc
 
 | Task | Detail | Status |
 |---|---|---|
-| Master git + ignores | Root git; ignore `local/`, `repos/*` contents, secrets | Done (commit `d20b7a2`, no remote) |
+| Master git + ignores | Root git; ignore `local/`, `repos/*` contents, secrets | Done — remote `https://github.com/meetrakib/orbicrew_master` |
 | Agent instructions | `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, bootstrap | Done |
 | Process docs | This plan, tracker, manual test guide | Done |
-| Scaffold org repos | `orbicrew-web`, `orbicrew-api`, `orbicrew-channels`, `orbicrew-infra` with `main`/`stage`/`dev` | Done (local only; no remotes) |
+| Scaffold org repos | `orbicrew-web`, `orbicrew-api`, `orbicrew-channels`, `orbicrew-infra` with `main`/`stage`/`dev` | Done — remotes pushed to `leangine/*` |
 
-**Exit criteria:** a new agent can read `AGENT_BOOTSTRAP.md` and know where to work without a human re-briefing the product. **Met for local workspace.** Remaining user action: create org GitHub repos and attach remotes.
+**Exit criteria:** a new agent can read `AGENT_BOOTSTRAP.md` and know where to work without a human re-briefing the product. **Met.** Org remotes connected and `main`/`stage`/`dev` pushed.
 
 ---
 
@@ -143,7 +143,7 @@ Do **not** prioritize unless re-scoped:
 
 ## Suggested immediate next engineering slice (after this setup)
 
-1. Connect org GitHub remotes for the four scaffolding repos and push `main`/`stage`/`dev`.
+1. ~~Connect org GitHub remotes for the four scaffolding repos and push `main`/`stage`/`dev`.~~ **Done.**
 2. Phase 0.1: Compose skeleton in `orbicrew-infra` + Hello-world API/web containers.
 3. Phase 0.2–0.4: schema + Office Manager + router/budget guard vertical slice.
 4. Phase 0.6: thinnest chat UI that submits a task and shows status.

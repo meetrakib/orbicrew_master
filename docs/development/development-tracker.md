@@ -6,6 +6,45 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — Connect GitHub remotes and push scaffolds
+
+**Agent / operator:** Cursor agent  
+**Phase:** Phase -1 (workspace & agentic setup)  
+**Scope:** Remotes, push branches, document URLs — **no product features**
+
+### Done
+
+- Configured `origin` remotes:
+  - Master: `https://github.com/meetrakib/orbicrew_master.git`
+  - `orbicrew-api`: `https://github.com/leangine/orbicrew-api.git`
+  - `orbicrew-channels`: `https://github.com/leangine/orbicrew-channels.git`
+  - `orbicrew-infra`: `https://github.com/leangine/orbicrew-infra.git`
+  - `orbicrew-web`: `https://github.com/leangine/orbicrew-web.git`
+- Pushed `main`, `stage`, and `dev` for all four org repos (tracking set).
+- Updated docs with repo → GitHub URL → local path tables (`README.md`, `repos/README.md`, `AGENTS.md`, `CLAUDE.md`, `AGENT_BOOTSTRAP.md`, phase plan, cursor workspace rule).
+
+### Decisions / assumptions
+
+- HTTPS remotes (not SSH) as provided by the user.
+- Nested scaffolds pushed as-is; no nested README commit required for this slice.
+
+### Manual tests run
+
+- `git remote -v` on master + each nested repo — URLs match table above
+- Org branch pushes succeeded (`main`/`stage`/`dev`)
+
+### Next recommended work
+
+1. Begin Phase 0.1: Docker Compose skeleton + health endpoints in `orbicrew-infra` / api / web.
+2. Confirm GitHub default branch is `main` on each remote if not already.
+
+### Files / repos touched
+
+- Master docs/agent config (this commit)
+- Nested repos: remote + push only (no new commits)
+
+---
+
 ## 2026-08-07 — Agentic workspace setup (setup session)
 
 **Agent / operator:** Cursor agent (setup pass)  
@@ -37,7 +76,7 @@ Newest entries at the **top**.
 
 - Four org repos (web, api, channels, infra) rather than a single monorepo app — matches “one backend, many faces” and independent deploy units; workers stay in `orbicrew-api` initially.
 - Orbit View is original IP (not Agent Town fork), deferred to Phase 3 per product sequencing.
-- Master workspace = personal GitHub; nested repos = org GitHub (remotes to be added by user later).
+- Master workspace = personal GitHub; nested repos = org GitHub (remotes connected in follow-up entry).
 
 ### Manual tests run
 
@@ -48,8 +87,8 @@ Newest entries at the **top**.
 
 ### Next recommended work
 
-1. User creates GitHub org repos and provides remote URLs.
-2. Connect remotes + push `main`/`stage`/`dev` for each nested repo.
+1. ~~User creates GitHub org repos and provides remote URLs.~~ Done (follow-up entry).
+2. ~~Connect remotes + push `main`/`stage`/`dev` for each nested repo.~~ Done (follow-up entry).
 3. Begin Phase 0.1: Docker Compose skeleton + health endpoints.
 
 ### Files touched (high level)

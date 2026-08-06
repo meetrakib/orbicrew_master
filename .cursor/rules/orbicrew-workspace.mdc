@@ -16,8 +16,12 @@ Read `docs/development/AGENT_BOOTSTRAP.md` at session start for full onboarding.
 
 ## Ownership
 
-- Master workspace git = user's **personal** GitHub (docs + agent config only)
-- `repos/*` = **org** GitHub — commit code inside the nested repo, not into master
+- Master workspace git = personal GitHub `https://github.com/meetrakib/orbicrew_master` (docs + agent config only)
+- `repos/*` = Leangine org GitHub — commit code inside the nested repo, not into master
+  - web: `https://github.com/leangine/orbicrew-web`
+  - api: `https://github.com/leangine/orbicrew-api`
+  - channels: `https://github.com/leangine/orbicrew-channels`
+  - infra: `https://github.com/leangine/orbicrew-infra`
 
 ## Workflow
 

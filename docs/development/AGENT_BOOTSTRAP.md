@@ -42,8 +42,18 @@ orbicrew_development/          ← personal GitHub (master workspace)
 
 | GitHub | What |
 |---|---|
-| Personal | This master workspace (docs + agent config) |
-| Org | Nested repos under `repos/` |
+| Personal — [meetrakib/orbicrew_master](https://github.com/meetrakib/orbicrew_master) | This master workspace (docs + agent config) |
+| Org — [leangine](https://github.com/leangine) | Nested repos under `repos/` |
+
+### Repository URLs
+
+| Repo | GitHub | Local path |
+|---|---|---|
+| Master workspace | https://github.com/meetrakib/orbicrew_master | workspace root |
+| `orbicrew-web` | https://github.com/leangine/orbicrew-web | `repos/orbicrew-web` |
+| `orbicrew-api` | https://github.com/leangine/orbicrew-api | `repos/orbicrew-api` |
+| `orbicrew-channels` | https://github.com/leangine/orbicrew-channels | `repos/orbicrew-channels` |
+| `orbicrew-infra` | https://github.com/leangine/orbicrew-infra | `repos/orbicrew-infra` |
 
 ---
 

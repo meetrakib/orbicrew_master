@@ -10,7 +10,7 @@ Imported shared instructions: `@AGENTS.md`
 
 ## What this workspace is
 
-Master **personal** git repo for Orbicrew agentic development. Product code is in nested repos under `repos/`. Product requirements are in `docs/leangine-office-docs/`. Process docs are in `docs/development/`.
+Master **personal** git repo ([meetrakib/orbicrew_master](https://github.com/meetrakib/orbicrew_master)) for Orbicrew agentic development. Product code is in nested Leangine org repos under `repos/` (see URL table in `AGENTS.md` / `repos/README.md`). Product requirements are in `docs/leangine-office-docs/`. Process docs are in `docs/development/`.
 
 Do not implement application features at the workspace root.
 
@@ -22,7 +22,7 @@ Do not implement application features at the workspace root.
 2. **Before coding features:** follow `docs/development/phase_by_phase_development_plan.md`.
 3. **After a development slice:** update `docs/development/manual-test-guide.md` when test steps change.
 4. **After finishing work:** update `docs/development/development-tracker.md`.
-5. Nested `repos/*` = org GitHub; this root = personal GitHub. Commit inside the nested repo for code changes; commit here for docs/agent config.
+5. Nested `repos/*` = Leangine org GitHub; this root = personal GitHub (`https://github.com/meetrakib/orbicrew_master`). Commit inside the nested repo for code changes; commit here for docs/agent config.
 6. Branches in org repos: `main` (prod), `stage`, `dev` (default work).
 7. No secrets in commits. No force-push to protected branches unless asked.
 

@@ -1,8 +1,19 @@
 # `repos/` — Org project repositories
 
-Clone **Orbicrew / Leangine org** GitHub repositories into this directory. Contents of nested repos are **gitignored by the master workspace** so each service keeps its own git history.
+Clone **Leangine org** GitHub repositories into this directory. Contents of nested repos are **gitignored by the master workspace** so each service keeps its own git history.
 
 Tracked in the master repo: this `README.md` (and optional `.gitkeep`) only.
+
+## Repository URLs
+
+| Repo | GitHub | Local path |
+|---|---|---|
+| `orbicrew-web` | https://github.com/leangine/orbicrew-web | `repos/orbicrew-web` |
+| `orbicrew-api` | https://github.com/leangine/orbicrew-api | `repos/orbicrew-api` |
+| `orbicrew-channels` | https://github.com/leangine/orbicrew-channels | `repos/orbicrew-channels` |
+| `orbicrew-infra` | https://github.com/leangine/orbicrew-infra | `repos/orbicrew-infra` |
+
+Master workspace (personal): https://github.com/meetrakib/orbicrew_master
 
 ## Expected layout
 
@@ -26,19 +37,23 @@ repos/
 
 ## Branch strategy (every repo)
 
-- `main` — production-ready
+- `main` — production-ready (GitHub default)
 - `stage` — staging
 - `dev` — default development branch
 
-## Connecting remotes (when org URLs exist)
+## Clone
 
 ```bash
-cd repos/orbicrew-web
-git remote add origin git@github.com:<ORG>/orbicrew-web.git
-git push -u origin main
-git push -u origin stage
-git push -u origin dev
-# repeat for api, channels, infra
+cd repos
+git clone https://github.com/leangine/orbicrew-web.git
+git clone https://github.com/leangine/orbicrew-api.git
+git clone https://github.com/leangine/orbicrew-channels.git
+git clone https://github.com/leangine/orbicrew-infra.git
 ```
 
-Until remotes exist, local scaffolds may already be initialized for agentic prep.
+If scaffolds already exist locally, remotes are:
+
+```bash
+cd repos/orbicrew-web && git remote set-url origin https://github.com/leangine/orbicrew-web.git
+# repeat for api, channels, infra with matching URLs
+```

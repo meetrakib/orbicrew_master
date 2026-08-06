@@ -1,0 +1,13 @@
+---
+description: When editing or implementing against Orbicrew product documentation
+globs: docs/leangine-office-docs/**
+alwaysApply: false
+---
+
+# Product docs
+
+- Index: `docs/leangine-office-docs/tech/00_INDEX.md`
+- Brand lock: Orbicrew, Deep Violet, Bricolage Grotesque + Hanken Grotesk (`tech/09_brand_identity.md` §6)
+- Orbit View is original IP — not an Agent Town fork (`tech/18_orbit_view_game_ui.md`)
+- Priorities: cost control → reliability → multi-tenant → English-first → user-extensible agents
+- Prefer updating docs for factual corrections; do not expand speculative scope past the phase plan

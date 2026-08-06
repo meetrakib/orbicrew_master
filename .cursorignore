@@ -1,0 +1,29 @@
+# Agent indexing ignore (NOT the same as .gitignore)
+# Do NOT ignore local/, docs/, or repos/ — agents may need them.
+# ALWAYS ignore secrets / env files.
+
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Dependency and build noise (safe to skip for agent search)
+**/node_modules/**
+**/.next/**
+**/dist/**
+**/build/
+**/__pycache__/**
+**/.venv/**
+**/venv/**
+**/.turbo/**
+**/*.pyc
+**/coverage/**
+**/.pytest_cache/**
+**/.mypy_cache/**
+
+# Lockfiles are huge and rarely useful as full context
+**/package-lock.json
+**/pnpm-lock.yaml
+**/yarn.lock
+**/uv.lock
+**/poetry.lock

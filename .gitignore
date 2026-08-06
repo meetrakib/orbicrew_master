@@ -1,0 +1,68 @@
+# Local scratch / private materials (never commit)
+local/
+
+# Nested org project repos — clone into repos/ locally; do not commit their contents.
+# Keep the folder present via repos/README.md (or .gitkeep).
+repos/*
+!repos/README.md
+!repos/.gitkeep
+
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+.next/
+.turbo/
+.nuxt/
+.cache/
+*.tsbuildinfo
+
+# Secrets & env
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+credentials.json
+service-account*.json
+
+# OS / editor clutter
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+# Claude Code local (personal; not shared)
+.claude/settings.local.json
+**/.claude/settings.local.json
+CLAUDE.local.md
+
+# Logs & coverage
+*.log
+logs/
+coverage/
+.nyc_output/
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+
+# Test / temp
+tmp/
+temp/
+*.tmp

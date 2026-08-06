@@ -1,0 +1,32 @@
+---
+description: Orbicrew workspace layout, ownership, and mandatory development workflow
+alwaysApply: true
+---
+
+# Orbicrew workspace
+
+Read `docs/development/AGENT_BOOTSTRAP.md` at session start for full onboarding.
+
+## Layout
+
+- `docs/leangine-office-docs/` — product & tech requirements (source of truth for *what*)
+- `docs/development/` — phase plan, manual tests, tracker (source of truth for *process*)
+- `repos/` — nested org git repos where product code lives
+- `local/` — private scratch — **never read unless the user explicitly asks**
+
+## Ownership
+
+- Master workspace git = user's **personal** GitHub (docs + agent config only)
+- `repos/*` = **org** GitHub — commit code inside the nested repo, not into master
+
+## Workflow
+
+1. Before feature work → follow `docs/development/phase_by_phase_development_plan.md`
+2. After a development slice → update `docs/development/manual-test-guide.md` if needed
+3. After completing work → append to `docs/development/development-tracker.md`
+
+Do not implement product features at the workspace root.
+
+## Branches (nested repos)
+
+`main` (prod) · `stage` · `dev` (default active work)

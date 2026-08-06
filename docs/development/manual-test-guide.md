@@ -70,6 +70,7 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 | 0.B.3 | Budget guard | Task over cap pauses / fails safely (no runaway spend) | Pass (2026-08-07) — `POST /v1/tasks` with `budget_cap_usd: 0.01` against a frontier-tier phrasing returns `status: "paused"`, `spend_so_far_usd: 0`, and no `usage_records` row is written |
 | 0.B.4 | Router prefers cheap tier | Simple task does not hit frontier model (verify in usage logs) | Pass (2026-08-07) — short/simple phrasing routes to `cheap`/`trivial` tier (`claude-haiku` / free tier); only hard-keyword phrasing (e.g. "debug production architecture") escalates to `frontier` (`claude-opus`); confirmed via `usage_records` rows |
 | 0.B.5 | Task persisted with step trace | `GET /v1/tasks/:id` returns `classify` + `specialist_execute` steps in order; unknown id → 404 | Pass (2026-08-07) |
+| 0.B.6 | Specialists call a real model | `POST /v1/tasks` (with `ANTHROPIC_API_KEY` set) returns real, non-canned specialist output; `usage_records` row has non-zero `input_tokens`/`output_tokens` and a `cost_usd` computed from them (not the flat per-tier estimate) | Pass (2026-08-07) — verified for coding- and research-routed phrasing; `psql` confirmed real token counts on the `usage_records` row |
 
 ### 0.C Agents
 

@@ -6,6 +6,43 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — Phase 0.5: real specialists (Anthropic API)
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 0 (Personal tool) — task 0.5
+**Scope:** `orbicrew-api` only — replace the canned specialist stub with real Anthropic API calls; reconcile cost against real token usage. No LiteLLM gateway, no OpenRouter free-tier routing yet.
+
+### Done
+- `src/orbicrew_api/llm_client.py` (new): `complete(specialist, model, input_text)` — calls `client.messages.create` (Anthropic SDK, `anthropic.AsyncAnthropic`, lazily constructed via `lru_cache` so a missing API key doesn't break app startup) with a per-specialist system prompt (coding/writing/research/general), returns `CompletionResult(text, cost_usd, input_tokens, output_tokens)`. Cost is computed from real `response.usage` against a static `MODEL_PRICING_USD_PER_MTOK` table (Anthropic first-party per-1M-token pricing).
+- `office_manager.py`: specialist nodes are now `async` and call `llm_client.complete()` instead of returning `f"[{name}] noted: ..."`. `OfficeManagerState` gained `cost_usd`/`input_tokens`/`output_tokens` (the *actual* spend/usage, separate from `estimated_cost_usd`, which stays the Model Router's pre-call flat estimate used only for the Budget Guard gate). `SPECIALISTS` simplified from a display-name dict to a tuple of keys (display names were unused once the canned-string output went away).
+- `model_router.py`: `TIER_MODELS` now maps each tier to a real Anthropic model ID — `trivial`/`cheap` → `claude-haiku-4-5`, `mid` → `claude-sonnet-5`, `frontier` → `claude-opus-5`. `trivial` reuses Haiku rather than the placeholder `openrouter/free-tier` string, since OpenRouter/LiteLLM routing isn't wired yet.
+- `tasks.py`: `usage_records` now gets real `input_tokens`/`output_tokens` (previously hardcoded `0, 0`) and `spend_so_far_usd`/`cost_usd` come from the specialist's actual call, not the router's estimate.
+- `settings.py` / `.env.example`: added `ANTHROPIC_API_KEY` (optional at the settings layer; required at first real specialist call).
+- Tests: `test_office_manager.py` and `test_tasks.py` now patch `orbicrew_api.office_manager.complete` with a fake `CompletionResult` instead of hitting the network; assertions updated to check actual (mocked) cost/tokens instead of the old flat per-tier numbers. `uv run pytest` — 23 passed.
+- Manual verification against the live API with a real `ANTHROPIC_API_KEY` (user-provided): coding-routed and research-routed phrasing both returned real, non-canned model output; `psql` on `usage_records` confirmed non-zero `input_tokens`/`output_tokens` and a `cost_usd` matching the real-usage calculation (not the old flat `0.01`/`0.25` placeholders).
+
+### Decisions / assumptions
+- **Direct Anthropic SDK, not a self-hosted LiteLLM gateway** — explicit user choice (asked via AskUserQuestion). The system design doc's cost-first architecture calls for a self-hosted LiteLLM proxy as the long-term model-calling surface; that's deferred to a later cost-hardening slice (fits naturally alongside Phase 1.2 budget hardening) since it's a materially bigger unit of work (new service, Compose entry, provider keys registered in LiteLLM config) than "make 3 specialists real." The specialist interface (`llm_client.complete`) is the natural swap point when that happens.
+- All four routing outcomes (coding/writing/research/general) now call a real model — not just the 2–3 the phase-plan task line names — since it was near-zero incremental code to include `general` and leaving it canned would've been an inconsistent seam.
+- Kept the Model Router's flat per-tier `estimated_cost_usd` as pre-call-only, used solely for the Budget Guard gate (which must decide before any spend happens); actual `cost_usd` from real token usage is what's persisted everywhere else (`usage_records`, `tasks.spend_so_far_usd`, the API response). This was flagged as the expected next step in the 0.4 tracker entry.
+- `anthropic.AsyncAnthropic` client is constructed lazily (`@lru_cache` on a getter, not at module import time) so the app still boots and existing endpoints work even before `ANTHROPIC_API_KEY` is set; it only raises when a specialist call is actually attempted.
+
+### Manual tests run
+- `uv run pytest` — 23 passed
+- Live API: `POST /v1/tasks` for a writing-shaped prompt (routed to `coding` due to a pre-existing `_KEYWORDS` false positive — `"description"` contains the substring `"script"` — not a Phase 0.5 issue, left alone) and a research-shaped prompt — both returned real Claude Haiku output and real cost
+- `psql -c 'select model_used, input_tokens, output_tokens, cost_usd from usage_records'` — new rows show real token counts and cost; older rows from before this change still show the old flat placeholders (`claude-opus`/`claude-haiku`, `0`/`0` tokens), confirming the shift is live-forward only, as expected for a schema with no backfill
+
+### Next recommended work
+1. Phase 0.6: thinnest chat UI in `orbicrew-web` that submits a task and shows status/tier/model/output.
+2. Known pre-existing bug (not fixed here, out of this slice's scope): the Phase 0.3 keyword classifier in `office_manager.classify()` has substring false positives (e.g. "description" matches the "script" keyword) — worth a real cheap-classifier-model pass whenever that's prioritized, per the existing code comment.
+3. Self-hosted LiteLLM gateway swap-in, when cost-hardening work starts (Phase 1.2 territory) — `llm_client.complete()` is the intended seam.
+
+### Files / repos touched
+- `repos/orbicrew-api`: `src/orbicrew_api/llm_client.py` (new), `src/orbicrew_api/office_manager.py`, `src/orbicrew_api/model_router.py`, `src/orbicrew_api/tasks.py`, `src/orbicrew_api/settings.py`, `.env.example`, `.env`, `pyproject.toml`, `tests/test_office_manager.py`, `tests/test_tasks.py`, `README.md`
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md` (this entry)
+
+---
+
 ## 2026-08-07 — Phase 0.4: Model Router + Budget Guard
 
 **Agent / operator:** Claude Code

@@ -56,7 +56,7 @@ UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_
 | 3 — Differentiation | `orbicrew-web` (Orbit View), channels (Discord), integrations |
 ---
 
-## Phase -1 — Workspace & agentic setup *(current)*
+## Phase -1 — Workspace & agentic setup
 
 **Goal:** reproducible agentic coding environment; empty-but-branched project repos; process docs ready.
 
@@ -74,7 +74,7 @@ UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_
 
 ---
 
-## Phase 0 — Personal tool (validate for yourself first)
+## Phase 0 — Personal tool (validate for yourself first) *(current)*
 
 **Goal:** founder uses Orbicrew daily on real work before multi-tenant/sellable product work.
 
@@ -87,17 +87,17 @@ UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_
 - Optional: personal voice STT/TTS once chat path works
 - Shared deps via `resources/orbicrew_dev_infra` Compose; apps run natively
 
-| # | Task | Detail | Depends on | Repos |
-|---|---|---|---|---|
-| 0.1 | Local deps + app skeletons | Postgres+pgvector + Redis via `resources/orbicrew_dev_infra`; api/web health locally | — | master deps, api, web |
-| 0.2 | Core schema | Tables from `tech/04_database_design.md` minus full billing surface | 0.1 | api |
-| 0.3 | LangGraph supervisor | Office Manager routes to hardcoded specialists | 0.2 | api |
-| 0.4 | Model router + budget guard | Classify → tier; hard per-task cap | 0.3 | api |
-| 0.5 | 2–3 specialists | Pick from real need (e.g. writing, research, coding) | 0.4 | api |
-| 0.6 | Standard chat GUI | Text I/O + task status | 0.4 | web |
-| 0.7 | OpenAPI + TS client | Typed contract web ↔ api | 0.3–0.6 | api, web |
-| 0.8 | Voice (optional early) | Whisper STT + TTS for founder languages | 0.6 | api, web |
-| 0.9 | Daily-use soak | 2–3 weeks real work before Phase 1 | all above | — |
+| # | Task | Detail | Depends on | Repos | Status |
+|---|---|---|---|---|---|
+| 0.1 | Local deps + app skeletons | Postgres+pgvector + Redis via `resources/orbicrew_dev_infra`; api/web health locally | — | master deps, api, web | **Done** — Compose healthy; FastAPI `/health`+`/ready`; Next.js status shell |
+| 0.2 | Core schema | Tables from `tech/04_database_design.md` minus full billing surface | 0.1 | api | Pending |
+| 0.3 | LangGraph supervisor | Office Manager routes to hardcoded specialists | 0.2 | api | Pending |
+| 0.4 | Model router + budget guard | Classify → tier; hard per-task cap | 0.3 | api | Pending |
+| 0.5 | 2–3 specialists | Pick from real need (e.g. writing, research, coding) | 0.4 | api | Pending |
+| 0.6 | Standard chat GUI | Text I/O + task status | 0.4 | web | Pending |
+| 0.7 | OpenAPI + TS client | Typed contract web ↔ api | 0.3–0.6 | api, web | Pending |
+| 0.8 | Voice (optional early) | Whisper STT + TTS for founder languages | 0.6 | api, web | Pending |
+| 0.9 | Daily-use soak | 2–3 weeks real work before Phase 1 | all above | — | Pending |
 
 **Exit criteria:** genuinely prefer using this over doing recurring task types yourself.
 
@@ -168,10 +168,10 @@ Do **not** prioritize unless re-scoped:
 
 ---
 
-## Suggested immediate next engineering slice (after this setup)
+## Suggested immediate next engineering slice
 
 1. ~~Connect org GitHub remotes for scaffolding repos and push `main`/`stage`/`dev`.~~ **Done** (including `orbicrew-admin`).
-2. Phase 0.1: confirm `resources/orbicrew_dev_infra` deps + Hello-world API/web run natively against them.
+2. ~~Phase 0.1: deps Compose + native api/web health.~~ **Done**.
 3. Phase 0.2–0.4: schema + Office Manager + router/budget guard vertical slice.
 4. Phase 0.6: thinnest chat UI that submits a task and shows status.
 5. Early: `orbicrew-admin` auth shell (empty operator layout) when convenient; full ops UI remains Phase 2.6.

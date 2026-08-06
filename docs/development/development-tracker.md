@@ -6,6 +6,49 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — Phase 0.1: local deps + api/web health skeletons
+
+**Agent / operator:** Cursor agent  
+**Phase:** Phase 0 (Personal tool) — task **0.1**  
+**Scope:** Start shared Postgres/Redis; scaffold runnable `orbicrew-api` + `orbicrew-web` with health/status probes
+
+### Done
+
+- Confirmed `resources/orbicrew_dev_infra` Compose: Postgres (pgvector/pg16) + Redis healthy on `localhost:5432` / `6379`.
+- **`orbicrew-api` (dev):** uv + FastAPI skeleton — `GET /health` (liveness), `GET /ready` (Postgres + Redis probes), CORS for web, `.env.example`, pytest for health stubs, README runbook.
+- **`orbicrew-web` (dev):** Next.js App Router + Tailwind shell with Deep Violet tokens + Bricolage/Hanken; home page probes API `/health` + `/ready` via `ORBICREW_API_URL`.
+- Manual verification: API ready HTTP 200 with both deps ok; web HTTP 200 showing **healthy** / postgres+redis ok.
+- Updated phase plan (0.1 Done), manual test guide §0.A.
+
+### Decisions / assumptions
+
+- Python **3.12** via uv (host default is 3.14; pin for ecosystem stability).
+- Health routes at API root (`/health`, `/ready`) for early scaffolding; versioned `/v1/*` product routes come with later slices.
+- Web uses server-side `ORBICREW_API_URL` (default `http://localhost:8000`) — no browser CORS required for the status page fetch.
+
+### Manual tests run
+
+- 0.A.1–0.A.4 — pass (see `manual-test-guide.md`)
+- `uv run pytest` in api — 2 passed
+
+### Blockers
+
+- None
+
+### Next recommended work
+
+1. Phase 0.2: core Postgres schema (`tenant_id` from day one; billing surface deferred).
+2. Then 0.3–0.4 vertical slice: Office Manager + model router + budget guard.
+3. Commit/push `dev` on api + web (+ master docs) when asked.
+
+### Files / repos touched
+
+- `repos/orbicrew-api` — package layout under `src/orbicrew_api/`, tests, lockfile, README
+- `repos/orbicrew-web` — Next.js app, status page, brand CSS tokens, README
+- Master: `docs/development/phase_by_phase_development_plan.md`, `manual-test-guide.md`, this tracker
+
+---
+
 ## 2026-08-07 — Dev-branch workflow + admin tech docs
 
 **Agent / operator:** Cursor agent  

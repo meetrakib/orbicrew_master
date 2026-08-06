@@ -16,9 +16,9 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 
 | Prerequisite | Local how-to | Status |
 |---|---|---|
-| Shared deps (Postgres, Redis) | `resources/orbicrew_dev_infra` — `docker compose up -d` | Available (scaffold) |
-| API reachable | Native process in `repos/orbicrew-api` (TBD URL) | Not yet |
-| Web reachable | Native process in `repos/orbicrew-web` (TBD URL) | Not yet |
+| Shared deps (Postgres, Redis) | `resources/orbicrew_dev_infra` — `docker compose up -d` | Available |
+| API reachable | Native: `cd repos/orbicrew-api && uv sync && uv run orbicrew-api` → `http://localhost:8000` | Available (Phase 0.1) |
+| Web reachable | Native: `cd repos/orbicrew-web && npm install && npm run dev` → `http://localhost:3000` | Available (Phase 0.1) |
 | Admin reachable | Native process in `repos/orbicrew-admin` (TBD URL) | Not yet |
 | Test tenant / user | TBD | Not yet |
 | Model keys / LiteLLM | `.env` (never commit) | Not yet |
@@ -48,9 +48,10 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 
 | # | Check | Expected | Status |
 |---|---|---|---|
-| 0.A.1 | Deps compose up | Postgres + Redis healthy via `resources/orbicrew_dev_infra` | Pending |
-| 0.A.2 | API health | Native API health endpoint returns OK | Pending |
-| 0.A.3 | Web loads | Native dashboard shell loads without console errors | Pending |
+| 0.A.1 | Deps compose up | `docker compose ps` shows Postgres + Redis **healthy** in `resources/orbicrew_dev_infra` | Pass (2026-08-07) |
+| 0.A.2 | API liveness | `curl http://localhost:8000/health` → `{"status":"ok",...}` | Pass (2026-08-07) |
+| 0.A.3 | API readiness | `curl http://localhost:8000/ready` → `status: ready`, postgres+redis `ok` (HTTP 200) | Pass (2026-08-07) |
+| 0.A.4 | Web status shell | `http://localhost:3000` shows Orbicrew status with API **healthy** and postgres/redis ok | Pass (2026-08-07) |
 
 ### 0.B Task path (core)
 

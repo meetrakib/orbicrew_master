@@ -32,6 +32,8 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 | W2 | Master repo ignores nested repo contents | `repos/orbicrew-web/README.md` is ignored by master git (except `repos/README.md`) |
 | W3 | Agent docs present | `AGENT_BOOTSTRAP.md`, phase plan, tracker, `AGENTS.md`, `CLAUDE.md` exist |
 | W4 | Nested repos have `main`, `stage`, `dev` | `git branch` in each `repos/*` shows all three |
+| W5 | Nested READMEs stand alone | No references to `orbicrew_master`, `docs/development`, or `AGENT_BOOTSTRAP` inside `repos/orbicrew-*/` |
+| W6 | `resources/` tracked | `resources/README.md` and Stitch guide present; not gitignored |
 
 ---
 

@@ -6,10 +6,25 @@ alwaysApply: false
 
 # Nested org repos
 
-You are editing a nested git repository under `repos/`.
+You are editing a nested git repository under `repos/<name>/`.
+
+## Self-contained repos (critical)
+
+When editing **any file** under `repos/<name>/`:
+
+- Treat that repo as **independently consumable**. Someone may clone only the GitHub org repo with no master workspace present.
+- **Never** reference the master workspace, `orbicrew_master`, `orbicrew_development`, `docs/`, `docs/development/`, `AGENT_BOOTSTRAP`, `resources/`, `local/`, or sibling **local** paths (`../orbicrew-*`, `repos/...`).
+- Cross-links to sibling **GitHub** org repos by URL are OK (e.g. `https://github.com/leangine/orbicrew-api`).
+- Master-only context (phase plan, product docs, Stitch guides, logos under `resources/`) belongs **only** in the master repo — copy assets into the nested repo when the app needs them.
+
+## Git & branches
 
 - Run git commands from that service directory (`repos/<name>`).
 - Do not stage nested repo files into the **master** workspace commit (master gitignores `repos/*` contents).
 - Prefer the service's own README and `.gitignore`.
 - Default working branch: `dev`. Long-lived: `main`, `stage`, `dev`.
+
+## Product boundaries
+
 - Keep channel adapters thin; put orchestration in `orbicrew-api`.
+- Platform operator UI lives in `orbicrew-web` (`/admin`), not a separate admin repo unless explicitly re-scoped.

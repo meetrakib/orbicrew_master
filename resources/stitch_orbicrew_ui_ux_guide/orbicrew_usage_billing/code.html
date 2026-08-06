@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html class="" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Orbicrew - Billing &amp; Usage</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..700&amp;family=Hanken+Grotesk:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-tertiary": "#ffffff", "surface-tint": "#584fbc", "on-surface-variant": "#474553", "on-secondary-fixed-variant": "#604100", "secondary-fixed": "#ffdeae", "on-tertiary-fixed": "#2f1500", "surface-container-highest": "#e6deff", "secondary-container": "#ffc566", "tertiary-fixed": "#ffdcc3", "on-surface": "#1c1639", "primary-container": "#534ab7", "inverse-primary": "#c5c0ff", "surface-dim": "#ddd5ff", "on-primary-fixed": "#140067", secondary: "#7f5700", "inverse-surface": "#312b4f", "tertiary-container": "#8a4900", "on-background": "#1c1639", "surface-container-lowest": "#ffffff", "on-error-container": "#93000a", tertiary: "#683500", "secondary-fixed-dim": "#f6bd5e", "on-primary-fixed-variant": "#3f35a3", "outline-variant": "#c8c4d5", "error-container": "#ffdad6", "on-tertiary-fixed-variant": "#6e3900", "surface-container-high": "#ece4ff", "on-error": "#ffffff", error: "#ba1a1a", "on-secondary": "#ffffff", outline: "#787584", "on-secondary-container": "#775100", "surface-container-low": "#f7f1ff", "inverse-on-surface": "#f4eeff", "on-primary": "#ffffff", "surface-variant": "#e6deff", surface: "#fdf8ff", "on-secondary-fixed": "#281900", "surface-container": "#f1ebff", primary: "#3b309e", "primary-fixed": "#e3dfff", "on-tertiary-container": "#ffc69a", "on-primary-container": "#d1ccff", "surface-bright": "#fdf8ff", "primary-fixed-dim": "#c5c0ff", "tertiary-fixed-dim": "#ffb77d", background: "#fdf8ff"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {"margin-desktop": "40px", base: "8px", "stack-md": "24px", "stack-lg": "48px", "container-max": "1280px", "margin-mobile": "20px", "stack-sm": "12px", gutter: "24px"}, fontFamily: {"label-sm": ["Hanken Grotesk"], "display-lg-mobile": ["Bricolage Grotesque"], "label-md": ["Hanken Grotesk"], "body-lg": ["Hanken Grotesk"], "body-md": ["Hanken Grotesk"], "display-lg": ["Bricolage Grotesque"], "headline-sm": ["Bricolage Grotesque"], "headline-md": ["Bricolage Grotesque"], headline: ["Bricolage Grotesque"], display: ["Bricolage Grotesque"], body: ["Hanken Grotesk"], label: ["Hanken Grotesk"]}, fontSize: {"label-sm": ["12px", {lineHeight: "1", fontWeight: "500"}], "display-lg-mobile": ["40px", {lineHeight: "1.2", letterSpacing: "-0.01em", fontWeight: "600"}], "label-md": ["14px", {lineHeight: "1", letterSpacing: "0.02em", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "1.6", fontWeight: "400"}], "body-md": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "display-lg": ["56px", {lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "600"}], "headline-sm": ["24px", {lineHeight: "1.4", fontWeight: "600"}], "headline-md": ["32px", {lineHeight: "1.3", fontWeight: "600"}]}}}};</script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Bricolage Grotesque', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden md:flex flex-col h-screen fixed left-0 top-0 py-stack-md bg-surface border-r border-outline-variant w-64 z-40">
+<div class="px-stack-md mb-stack-lg">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined font-bold">work</span>
+</div>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-semibold text-primary">Orbicrew Workspace</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">AI Employee Office</p>
+</div>
+</div>
+</div>
+<div class="flex-1 px-base overflow-y-auto space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label-md text-label-md">Agents</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-label-md text-label-md">Tasks</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined">fact_check</span>
+<span class="font-label-md text-label-md">Approvals</span>
+</a>
+<!-- Active Tab -->
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-primary font-bold bg-surface-container-low border-r-2 border-primary" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md text-label-md">Billing</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+<div class="px-stack-md mt-auto space-y-4">
+<button class="w-full py-2 px-4 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-fixed transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                 Hire New Agent
+             </button>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer">
+<span class="material-symbols-outlined">dark_mode</span>
+<span class="font-label-md text-label-md">Theme Toggle</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar (Shared Component) -->
+<header class="flex justify-between items-center h-16 px-margin-desktop w-full sticky top-0 z-30 bg-surface/80 backdrop-blur-md border-b border-outline-variant">
+<div class="flex items-center md:hidden">
+<span class="font-display-lg text-headline-md font-bold text-primary">Orbicrew</span>
+</div>
+<div class="hidden md:flex flex-1 max-w-md ml-4">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-full py-2 pl-10 pr-4 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4 ml-auto">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="A professional headshot avatar of an executive in a minimalist, dimly lit studio with subtle violet rim lighting. The style is hyper-realistic and polished, matching a premium dark-mode dashboard context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYeHZSKCvtViflTMhFjJ59BjMrNhe-8LDFDgvOENrSXQX5RLvaWnb9vSGPcfe4NRyTmlenq7DsHyvSochBUg_bHyzON71OWDwAZkvGaWzAj5RUh069ClO2NgtLCCwEeh5n6S1RxSDRu7dy8eaMaJayqF0iGlwlV9hnIDAZlevqzYWZLeBtty4BVJqFDuRp16Tdkse0P_UjsA1rjoaS2U0ZMRDjMf-jVuyhTFK8ocPU9JiLqnA933mDSg"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<div class="flex-1 p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto w-full">
+<div class="mb-stack-lg">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-2">Usage &amp; Billing</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage your workspace consumption and active subscriptions.</p>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Main Quota Card (Spans 2 cols on lg) -->
+<div class="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">speed</span>
+                                    Current Billing Cycle
+                                </h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Oct 1 - Oct 31, 2023</p>
+</div>
+<div class="text-right">
+<span class="font-headline-md text-headline-md text-on-surface">$2,450</span>
+<span class="font-body-md text-body-md text-on-surface-variant"> / $3,000</span>
+</div>
+</div>
+<!-- Progress Bar -->
+<div class="mb-4">
+<div class="flex justify-between font-label-md text-label-md mb-2">
+<span class="text-error">You're at 81% of this month's included usage.</span>
+<span class="text-on-surface-variant">81%</span>
+</div>
+<div class="h-3 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 81%;"></div>
+</div>
+</div>
+</div>
+<div class="mt-6 flex items-center gap-4 border-t border-outline-variant pt-6">
+<button class="py-2 px-6 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-fixed transition-colors">
+                            Upgrade Plan
+                        </button>
+<span class="font-body-md text-body-md text-on-surface-variant">To avoid service interruption, upgrade your managed plan before hitting 100%.</span>
+</div>
+</div>
+<!-- Model Tier Breakdown -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">donut_large</span>
+                        Model Efficiency
+                    </h3>
+<!-- Faux Donut Chart / Stats -->
+<div class="relative w-48 h-48 mx-auto mb-6 flex items-center justify-center rounded-full border-8 border-surface-container-highest">
+<!-- CSS Hack for Donut Segments (simplified for static layout) -->
+<div class="absolute inset-0 rounded-full border-8 border-primary" style="clip-path: polygon(50% 50%, 50% 0, 100% 0, 100% 100%, 0 100%, 0 50%); border-color: #c5c0ff;"></div>
+<div class="text-center z-10 bg-surface-container-lowest rounded-full w-32 h-32 flex flex-col items-center justify-center">
+<span class="font-headline-md text-headline-md text-on-surface">80%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Cost Efficient</span>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-center font-body-md text-body-md">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+<span class="text-on-surface">Standard Models</span>
+</div>
+<span class="text-on-surface-variant">80%</span>
+</div>
+<div class="flex justify-between items-center font-body-md text-body-md">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-surface-container-highest"></div>
+<span class="text-on-surface">Premium Models</span>
+</div>
+<span class="text-on-surface-variant">20%</span>
+</div>
+</div>
+</div>
+<!-- Cost by Agent (Spans full width) -->
+<div class="lg:col-span-3 bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary">bar_chart</span>
+                            Cost by Agent
+                        </h3>
+<select class="bg-surface-container-low border border-outline-variant text-on-surface text-label-md rounded-lg py-1 px-3 focus:ring-primary focus:border-primary">
+<option>This Month</option>
+<option>Last Month</option>
+</select>
+</div>
+<!-- Faux Bar Chart -->
+<div class="h-64 flex items-end gap-4 mt-8 px-4 border-b border-l border-outline-variant pb-2 relative">
+<!-- Y Axis labels -->
+<div class="absolute -left-10 top-0 h-full flex flex-col justify-between font-label-sm text-label-sm text-on-surface-variant py-2">
+<span>$1k</span>
+<span>$750</span>
+<span>$500</span>
+<span>$250</span>
+</div>
+<!-- Bars -->
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full max-w-[48px] bg-primary rounded-t-sm h-[80%] relative group-hover:bg-primary-fixed transition-colors">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-surface-container-highest px-2 py-1 rounded text-label-sm text-on-surface transition-opacity whitespace-nowrap">$800</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate w-full text-center">Data Analyst</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full max-w-[48px] bg-primary rounded-t-sm h-[65%] relative group-hover:bg-primary-fixed transition-colors">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-surface-container-highest px-2 py-1 rounded text-label-sm text-on-surface transition-opacity whitespace-nowrap">$650</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate w-full text-center">Copywriter</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full max-w-[48px] bg-primary rounded-t-sm h-[40%] relative group-hover:bg-primary-fixed transition-colors">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-surface-container-highest px-2 py-1 rounded text-label-sm text-on-surface transition-opacity whitespace-nowrap">$400</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate w-full text-center">Researcher</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full max-w-[48px] bg-primary rounded-t-sm h-[20%] relative group-hover:bg-primary-fixed transition-colors">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-surface-container-highest px-2 py-1 rounded text-label-sm text-on-surface transition-opacity whitespace-nowrap">$200</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate w-full text-center">Support</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer (Shared Component) -->
+<footer class="w-full py-stack-md border-t border-outline-variant mt-auto">
+<div class="max-w-container-max mx-auto px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="font-label-sm text-label-sm text-on-surface-variant">
+                    © 2024 Orbicrew by Leangine
+                </div>
+<div class="flex gap-4 font-label-sm text-label-sm text-on-surface-variant">
+<a class="hover:text-primary hover:underline transition-all" href="#">Privacy Policy</a>
+<a class="hover:text-primary hover:underline transition-all" href="#">Terms of Service</a>
+<a class="hover:text-primary hover:underline transition-all" href="#">Documentation</a>
+<a class="hover:text-primary hover:underline transition-all" href="#">Support</a>
+</div>
+</div>
+</footer>
+</main>
+</body></html>

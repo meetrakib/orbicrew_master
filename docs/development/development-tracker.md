@@ -6,6 +6,48 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — Admin decision, nested-repo isolation, resources
+
+**Agent / operator:** Cursor agent  
+**Phase:** Phase -1 (workspace & agentic setup)  
+**Scope:** Docs/rules + nested README scrub + track `resources/` — **no product features**
+
+### Done
+
+- **Admin decision:** no `orbicrew-admin` repo. Tenant settings + platform operator console live in `orbicrew-web` (protected `/admin` for operators). Scoped into Phase 2 (tasks 2.5–2.6).
+- Scrubbed all four nested READMEs to be standalone (GitHub sibling URLs only; no master/`docs/`/`AGENT_BOOTSTRAP` references).
+- Persisted agent rules: nested-repo isolation + best-practices/DRY in `AGENTS.md`, `CLAUDE.md`, `AGENT_BOOTSTRAP.md`, `.cursor/rules/orbicrew-workspace.mdc`, `.cursor/rules/nested-repos.mdc`.
+- Documented master-only `resources/logos/` (empty, `.gitkeep`) and `resources/stitch_orbicrew_ui_ux_guide/` (Stitch screens listed). Confirmed `.gitignore` does **not** ignore `resources/`.
+- Updated README, `repos/README.md`, phase plan, this tracker.
+
+### Decisions / assumptions
+
+- Prefer admin-inside-web over a 5th org repo until operator deploy/auth clearly diverges.
+- Nested repos must remain independently consumable; master context stays in master docs only.
+- Logos folder currently empty — reserved and tracked for upcoming brand assets.
+
+### Manual tests run
+
+- Nested README greps for master-workspace terms — clean
+- `git check-ignore` on `resources/` — not ignored by master `.gitignore`
+- Ignore policy unchanged: `local/` + `repos/*` contents ignored; cursor/claude ignore `.env*`
+
+### Next recommended work
+
+1. Begin Phase 0.1: Docker Compose skeleton + health endpoints in `orbicrew-infra` / api / web.
+2. Drop logo files into `resources/logos/` when available.
+
+### Files / repos touched
+
+- Master: docs, agent rules, README, `resources/**`
+- Nested README commits (pushed `main`/`stage`/`dev`):
+  - `orbicrew-web` `a6c147e`
+  - `orbicrew-api` `aac72a7`
+  - `orbicrew-channels` `7efdbc4`
+  - `orbicrew-infra` `27ae773`
+
+---
+
 ## 2026-08-07 — Connect GitHub remotes and push scaffolds
 
 **Agent / operator:** Cursor agent  

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html class="" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Task Detail - Orbicrew</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600&amp;family=Hanken+Grotesk:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-tertiary": "#ffffff", "surface-tint": "#584fbc", "on-surface-variant": "#474553", "on-secondary-fixed-variant": "#604100", "secondary-fixed": "#ffdeae", "on-tertiary-fixed": "#2f1500", "surface-container-highest": "#e6deff", "secondary-container": "#ffc566", "tertiary-fixed": "#ffdcc3", "on-surface": "#1c1639", "primary-container": "#534ab7", "inverse-primary": "#c5c0ff", "surface-dim": "#ddd5ff", "on-primary-fixed": "#140067", secondary: "#7f5700", "inverse-surface": "#312b4f", "tertiary-container": "#8a4900", "on-background": "#1c1639", "surface-container-lowest": "#ffffff", "on-error-container": "#93000a", tertiary: "#683500", "secondary-fixed-dim": "#f6bd5e", "on-primary-fixed-variant": "#3f35a3", "outline-variant": "#c8c4d5", "error-container": "#ffdad6", "on-tertiary-fixed-variant": "#6e3900", "surface-container-high": "#ece4ff", "on-error": "#ffffff", error: "#ba1a1a", "on-secondary": "#ffffff", outline: "#787584", "on-secondary-container": "#775100", "surface-container-low": "#f7f1ff", "inverse-on-surface": "#f4eeff", "on-primary": "#ffffff", "surface-variant": "#e6deff", surface: "#fdf8ff", "on-secondary-fixed": "#281900", "surface-container": "#f1ebff", primary: "#3b309e", "primary-fixed": "#e3dfff", "on-tertiary-container": "#ffc69a", "on-primary-container": "#d1ccff", "surface-bright": "#fdf8ff", "primary-fixed-dim": "#c5c0ff", "tertiary-fixed-dim": "#ffb77d", background: "#fdf8ff"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {"margin-desktop": "40px", base: "8px", "stack-md": "24px", "stack-lg": "48px", "container-max": "1280px", "margin-mobile": "20px", "stack-sm": "12px", gutter: "24px"}, fontFamily: {"label-sm": ["Hanken Grotesk"], "display-lg-mobile": ["Bricolage Grotesque"], "label-md": ["Hanken Grotesk"], "body-lg": ["Hanken Grotesk"], "body-md": ["Hanken Grotesk"], "display-lg": ["Bricolage Grotesque"], "headline-sm": ["Bricolage Grotesque"], "headline-md": ["Bricolage Grotesque"], headline: ["Bricolage Grotesque"], display: ["Bricolage Grotesque"], body: ["Hanken Grotesk"], label: ["Hanken Grotesk"]}, fontSize: {"label-sm": ["12px", {lineHeight: "1", fontWeight: "500"}], "display-lg-mobile": ["40px", {lineHeight: "1.2", letterSpacing: "-0.01em", fontWeight: "600"}], "label-md": ["14px", {lineHeight: "1", letterSpacing: "0.02em", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "1.6", fontWeight: "400"}], "body-md": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "display-lg": ["56px", {lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "600"}], "headline-sm": ["24px", {lineHeight: "1.4", fontWeight: "600"}], "headline-md": ["32px", {lineHeight: "1.3", fontWeight: "600"}]}}}};</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center h-16 px-margin-desktop w-full sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-4">
+<span class="font-display-lg text-headline-md font-bold text-primary dark:text-primary-fixed">Orbicrew</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant dark:text-outline cursor-pointer hover:text-primary dark:hover:text-primary-fixed transition-colors" data-icon="notifications">notifications</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A small, stylized digital avatar placeholder image representing a generic user profile. The aesthetic should be high-tech, minimalist, and use deep violet and soft white tones to match the Orbicrew UI dark mode. No realistic human faces." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjGtseY4B6dscMu5tdLmG50InO7_BwMKA51fQKCWmqVokPDJNKYw1RzBVcF11-K5fzDNz31lDVqWfbYnEJlICZi4SlgXBb64EZguK4wJcdXrOXOp_lJkuPpDjmoVsXXScOVTkNAwjlQw7ioCn8bNynQtOAiIRdOsOOPfJ-dFOiK20I3IWPPhWYxc5c3hWk9eOuSifAoRu9S2H_vfHbxR8knOdiCxqE9bUC_NBsl645cLZK0YYFaiE4RQ"/>
+</div>
+</div>
+</header>
+<div class="flex flex-1 w-full max-w-container-max mx-auto px-margin-desktop gap-gutter py-stack-lg">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col w-64 h-[calc(100vh-64px)] sticky top-16 border-r border-outline-variant dark:border-outline pr-stack-md shrink-0">
+<div class="flex flex-col gap-2 py-stack-md h-full">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span> Home
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span> Agents
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary dark:text-primary-fixed font-bold border-r-2 border-primary dark:border-primary-fixed bg-surface-container/50 font-label-md text-label-md scale-[0.99] transition-transform" href="#">
+<span class="material-symbols-outlined fill" data-icon="assignment">assignment</span> Tasks
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="fact_check">fact_check</span> Approvals
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span> Billing
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span> Settings
+                </a>
+<div class="mt-auto">
+<button class="w-full py-3 px-4 border border-outline-variant rounded-lg text-primary hover:bg-surface-container-high transition-colors font-label-md text-label-md mb-4 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="add">add</span> Hire New Agent
+                    </button>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="dark_mode">dark_mode</span> Theme Toggle
+                    </a>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col gap-stack-lg max-w-4xl min-w-0">
+<!-- Task Header Bento Box -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md flex flex-col gap-stack-sm relative overflow-hidden group">
+<div class="absolute inset-0 bg-primary opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none"></div>
+<div class="flex items-start justify-between flex-wrap gap-4">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<h1 class="font-headline-md text-headline-md text-on-surface">Compile Q3 Market Research Report</h1>
+<span class="px-2 py-1 rounded-full bg-secondary/10 border border-secondary/30 text-secondary font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span> Done
+                            </span>
+</div>
+<p class="text-on-surface-variant font-body-md">Task #TSK-9482-B • Completed in 4m 12s</p>
+</div>
+<div class="text-right">
+<div class="font-headline-sm text-headline-sm text-on-surface">$0.12</div>
+<div class="text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">Total Cost</div>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-outline-variant/50">
+<div class="flex flex-col gap-1">
+<span class="text-on-surface-variant font-label-sm text-label-sm">Agent</span>
+<div class="flex items-center gap-2 text-on-surface font-body-md">
+<span class="w-6 h-6 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-label-sm">R</span>
+                            Research Agent
+                        </div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-on-surface-variant font-label-sm text-label-sm">Channel</span>
+<div class="flex items-center gap-2 text-on-surface font-body-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="dashboard">dashboard</span> Dashboard
+                        </div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-on-surface-variant font-label-sm text-label-sm">Started</span>
+<div class="text-on-surface font-body-md">Oct 24, 14:30</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-on-surface-variant font-label-sm text-label-sm">Finished</span>
+<div class="text-on-surface font-body-md">Oct 24, 14:34</div>
+</div>
+</div>
+</div>
+<!-- Execution Trace Sequence -->
+<div class="flex flex-col gap-6 pl-2 relative">
+<!-- Vertical connecting line -->
+<div class="absolute left-[15px] top-6 bottom-6 w-px bg-outline-variant/50"></div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-2 flex items-center gap-2 ml-8">
+<span class="material-symbols-outlined text-primary" data-icon="history">history</span> Execution Trace
+                </h2>
+<!-- Step 1 -->
+<div class="flex gap-4 relative">
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center z-10 shrink-0 mt-1">
+<span class="material-symbols-outlined text-on-surface text-[16px]" data-icon="psychology">psychology</span>
+</div>
+<div class="flex-1 bg-surface-container-low border border-outline-variant rounded-lg p-4 hover:border-outline transition-colors group">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-label-md text-label-md text-on-surface">Classified as moderate complexity</h3>
+<span class="text-on-surface-variant font-label-sm text-label-sm">$0.01</span>
+</div>
+<p class="text-on-surface-variant font-body-md text-sm">Determined execution plan requiring web search and document synthesis capabilities.</p>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="flex gap-4 relative">
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center z-10 shrink-0 mt-1">
+<span class="material-symbols-outlined text-on-surface text-[16px]" data-icon="travel_explore">travel_explore</span>
+</div>
+<div class="flex-1 bg-surface-container-low border border-outline-variant rounded-lg p-4 hover:border-outline transition-colors">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-label-md text-label-md text-on-surface">Searched the web for 'product launch trends'</h3>
+<span class="text-on-surface-variant font-label-sm text-label-sm">$0.05</span>
+</div>
+<p class="text-on-surface-variant font-body-md text-sm mb-3">Executed 3 parallel search queries to gather recent data across major tech publications.</p>
+<!-- Collapsed Tool Call -->
+<details class="group cursor-pointer">
+<summary class="flex items-center gap-2 text-primary font-label-sm text-label-sm list-none select-none">
+<span class="material-symbols-outlined text-[16px] group-open:rotate-90 transition-transform" data-icon="chevron_right">chevron_right</span>
+                                View Tool Call Payload
+                            </summary>
+<div class="mt-3 p-3 bg-surface-container-highest rounded border border-outline-variant/50 overflow-x-auto">
+<pre class="text-xs text-on-surface-variant font-mono"><code>{
+  "tool": "web_search",
+  "parameters": {
+    "queries": [
+      "Q3 2024 tech product launch trends",
+      "SaaS pricing models 2024 report",
+      "AI startup market positioning Q3"
+    ],
+    "depth": "deep"
+  }
+}</code></pre>
+</div>
+</details>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="flex gap-4 relative">
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center z-10 shrink-0 mt-1">
+<span class="material-symbols-outlined text-on-surface text-[16px]" data-icon="edit_document">edit_document</span>
+</div>
+<div class="flex-1 bg-surface-container-low border border-outline-variant rounded-lg p-4 hover:border-outline transition-colors">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-label-md text-label-md text-on-surface">Synthesized findings into draft</h3>
+<span class="text-on-surface-variant font-label-sm text-label-sm">$0.06</span>
+</div>
+<p class="text-on-surface-variant font-body-md text-sm mb-3">Aggregated search results, extracted key insights, and formatted into final markdown report structure.</p>
+<details class="group cursor-pointer">
+<summary class="flex items-center gap-2 text-primary font-label-sm text-label-sm list-none select-none">
+<span class="material-symbols-outlined text-[16px] group-open:rotate-90 transition-transform" data-icon="chevron_right">chevron_right</span>
+                                View Tool Call Payload
+                            </summary>
+<div class="mt-3 p-3 bg-surface-container-highest rounded border border-outline-variant/50 overflow-x-auto">
+<pre class="text-xs text-on-surface-variant font-mono"><code>{
+  "tool": "document_writer",
+  "parameters": {
+    "format": "markdown",
+    "tone": "professional",
+    "sections": ["Executive Summary", "Market Trends", "Pricing Analysis", "Conclusion"]
+  }
+}</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+<!-- Output Artifacts -->
+<div class="mt-8 border-t border-outline-variant pt-8">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="inventory_2">inventory_2</span> Output Artifacts
+                </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<button class="flex items-center gap-4 bg-surface-container-low border border-outline-variant rounded-xl p-4 hover:bg-surface-container hover:border-primary/50 transition-all text-left group">
+<div class="w-12 h-12 rounded bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="font-label-md text-label-md text-on-surface truncate">Q3_Market_Research.md</h4>
+<span class="text-on-surface-variant font-label-sm text-label-sm">Markdown Document • 14KB</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="download">download</span>
+</button>
+<button class="flex items-center gap-4 bg-surface-container-low border border-outline-variant rounded-xl p-4 hover:bg-surface-container hover:border-primary/50 transition-all text-left group">
+<div class="w-12 h-12 rounded bg-tertiary/10 flex items-center justify-center text-tertiary group-hover:bg-tertiary/20 transition-colors">
+<span class="material-symbols-outlined" data-icon="data_table">data_table</span>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="font-label-md text-label-md text-on-surface truncate">Raw_Data_Extract.csv</h4>
+<span class="text-on-surface-variant font-label-sm text-label-sm">CSV File • 42KB</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-tertiary transition-colors" data-icon="download">download</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="w-full mt-auto bg-surface dark:bg-surface-container-lowest py-stack-md border-t border-outline-variant">
+<div class="max-w-container-max mx-auto px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-4">
+<span class="font-label-sm text-label-sm text-on-surface-variant dark:text-outline">© 2024 Orbicrew by Leangine</span>
+<div class="flex gap-4">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline transition-all" href="#">Privacy Policy</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline transition-all" href="#">Terms of Service</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline transition-all" href="#">Documentation</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline transition-all" href="#">Support</a>
+</div>
+</div>
+</footer>
+</body></html>

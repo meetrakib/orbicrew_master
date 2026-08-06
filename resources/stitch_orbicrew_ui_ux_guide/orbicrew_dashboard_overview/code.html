@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Orbicrew Workspace - Home</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&amp;family=Bricolage+Grotesque:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {error: "#ba1a1a", "on-tertiary": "#ffffff", tertiary: "#683500", background: "#fdf8ff", "secondary-container": "#ffc566", "on-tertiary-fixed-variant": "#6e3900", surface: "#fdf8ff", "surface-container-low": "#f7f1ff", "on-error": "#ffffff", "surface-variant": "#e6deff", "on-error-container": "#93000a", "primary-fixed-dim": "#c5c0ff", "tertiary-fixed": "#ffdcc3", "on-surface-variant": "#474553", "on-primary-container": "#d1ccff", secondary: "#7f5700", "outline-variant": "#c8c4d5", "surface-container-lowest": "#ffffff", "on-primary": "#ffffff", "surface-container": "#f1ebff", "on-tertiary-container": "#ffc69a", "on-secondary-fixed-variant": "#604100", "on-background": "#1c1639", "surface-dim": "#ddd5ff", "surface-tint": "#584fbc", "primary-fixed": "#e3dfff", "on-primary-fixed": "#140067", "on-primary-fixed-variant": "#3f35a3", "primary-container": "#534ab7", "inverse-surface": "#312b4f", "error-container": "#ffdad6", "surface-container-high": "#ece4ff", "on-tertiary-fixed": "#2f1500", "tertiary-container": "#8a4900", "surface-container-highest": "#e6deff", "secondary-fixed": "#ffdeae", "on-secondary-fixed": "#281900", "surface-bright": "#fdf8ff", "inverse-on-surface": "#f4eeff", "on-surface": "#1c1639", "inverse-primary": "#c5c0ff", "on-secondary": "#ffffff", "tertiary-fixed-dim": "#ffb77d", outline: "#787584", "secondary-fixed-dim": "#f6bd5e", primary: "#3b309e", "on-secondary-container": "#775100"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {"container-max": "1280px", base: "8px", gutter: "24px", "margin-desktop": "40px", "stack-sm": "12px", "stack-md": "24px", "stack-lg": "48px", "margin-mobile": "20px"}, fontFamily: {"label-md": ["Hanken Grotesk"], "body-md": ["Hanken Grotesk"], "display-lg": ["Bricolage Grotesque"], "display-lg-mobile": ["Bricolage Grotesque"], "headline-sm": ["Bricolage Grotesque"], "headline-md": ["Bricolage Grotesque"], "body-lg": ["Hanken Grotesk"], "label-sm": ["Hanken Grotesk"], headline: ["Bricolage Grotesque"], display: ["Bricolage Grotesque"], body: ["Hanken Grotesk"], label: ["Hanken Grotesk"]}, fontSize: {"label-md": ["14px", {lineHeight: "1", letterSpacing: "0.02em", fontWeight: "600"}], "body-md": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "display-lg": ["56px", {lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "600"}], "display-lg-mobile": ["40px", {lineHeight: "1.2", letterSpacing: "-0.01em", fontWeight: "600"}], "headline-sm": ["24px", {lineHeight: "1.4", fontWeight: "600"}], "headline-md": ["32px", {lineHeight: "1.3", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "1.6", fontWeight: "400"}], "label-sm": ["12px", {lineHeight: "1", fontWeight: "500"}]}}}};</script>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-screen fixed left-0 top-0 py-stack-md bg-surface dark:bg-surface-container-lowest docked left-0 h-full w-64 border-r border-outline-variant z-40">
+<div class="px-gutter mb-stack-lg">
+<h1 class="font-display-lg text-headline-md font-semibold text-primary dark:text-primary-fixed">Orbicrew Workspace</h1>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-outline mt-base">AI Employee Office</p>
+</div>
+<ul class="flex-1 px-gutter space-y-stack-sm">
+<li>
+<a class="flex items-center gap-base p-base rounded-lg text-primary dark:text-primary-fixed font-bold border-r-2 border-primary dark:border-primary-fixed hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors Active: scale-[0.99] transition-transform" href="#">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-base p-base rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label-md text-label-md">Agents</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-base p-base rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-label-md text-label-md">Tasks</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-base p-base rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">fact_check</span>
+<span class="font-label-md text-label-md">Approvals</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-base p-base rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md text-label-md">Billing</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-base p-base rounded-lg text-on-surface-variant dark:text-outline hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</li>
+</ul>
+<div class="px-gutter mt-auto pt-stack-md">
+<button class="w-full flex items-center justify-center gap-base bg-primary text-on-primary py-sm px-md rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity">
+                Hire New Agent
+            </button>
+<div class="mt-stack-md pt-stack-md border-t border-outline-variant dark:border-outline">
+<button class="flex items-center gap-base text-on-surface-variant dark:text-outline hover:text-primary transition-colors font-label-md text-label-md">
+<span class="material-symbols-outlined">dark_mode</span>
+                    Theme Toggle
+                </button>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center h-16 px-margin-desktop w-full sticky top-0 z-30 bg-surface/80 backdrop-blur-md docked top-0 w-full border-b border-outline-variant bg-surface dark:bg-surface-container-lowest">
+<div class="flex items-center gap-gutter md:hidden">
+<span class="font-display-lg-mobile text-headline-md font-bold text-primary dark:text-primary-fixed">Orbicrew</span>
+</div>
+<div class="hidden md:flex items-center bg-surface-container-lowest border border-outline-variant rounded-full px-4 py-2 w-96 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+<span class="material-symbols-outlined text-on-surface-variant mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 w-full text-body-md text-on-surface placeholder:text-on-surface-variant outline-none" placeholder="Search agents, tasks, or settings..." type="text"/>
+</div>
+<div class="flex items-center gap-gutter">
+<button class="text-on-surface-variant hover:text-primary transition-colors Active: opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant overflow-hidden flex items-center justify-center text-primary font-label-md text-label-md">
+<img class="object-cover w-full h-full" data-alt="A minimalist and highly professional user profile portrait of a modern knowledge worker in a brightly lit, high-end studio setting. Soft, diffused lighting highlights sharp features, set against a pristine, bright surface background characteristic of a minimal workspace UI aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8uY_Wi1kq1V5F6qgZO7FPC4t2FINXiHQdaSwObsLyNQpiFdrXOQ7UMrNAFUvJ_vKg6Br7UbTp2wfmTe3EH4w2qViUboBIUA1Zya_WfVPxcI6fMRnyAVIu4U05zV-xDXZKygmzEJl6pglhnUcMsSxeNNEq3_miW2f1Rmuqz-gUIx7epT58yaG9br5SHts9L0V4U3GrDDqIg9TGAzVAu7wfK4gJvC-68kHXTLUVd8COVL5EYZat4AUtIA"/>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<div class="flex-1 p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto w-full space-y-stack-lg">
+<div class="pt-stack-sm">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Overview</h2>
+</div>
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Stat Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter hover:border-outline transition-colors">
+<div class="flex items-start justify-between mb-stack-md">
+<h3 class="font-label-md text-label-md text-on-surface-variant">Active Tasks</h3>
+<div class="bg-primary-container/10 text-primary p-2 rounded-lg">
+<span class="material-symbols-outlined">assignment</span>
+</div>
+</div>
+<div class="flex items-baseline gap-base">
+<span class="font-display-lg text-display-lg text-on-surface">4</span>
+<span class="font-label-sm text-label-sm text-primary">+1 from yesterday</span>
+</div>
+</div>
+<!-- Stat Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter hover:border-outline transition-colors">
+<div class="flex items-start justify-between mb-stack-md">
+<h3 class="font-label-md text-label-md text-on-surface-variant">Monthly Spend</h3>
+<div class="bg-secondary-container/10 text-secondary p-2 rounded-lg">
+<span class="material-symbols-outlined">payments</span>
+</div>
+</div>
+<div class="flex items-baseline gap-base mb-stack-sm">
+<span class="font-headline-md text-headline-md text-on-surface">$42.50</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">/ $100.00</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 42.5%"></div>
+</div>
+</div>
+<!-- Stat Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter hover:border-outline transition-colors">
+<div class="flex items-start justify-between mb-stack-md">
+<h3 class="font-label-md text-label-md text-on-surface-variant">Agents Status</h3>
+<div class="bg-tertiary-container/10 text-tertiary p-2 rounded-lg">
+<span class="material-symbols-outlined">smart_toy</span>
+</div>
+</div>
+<div class="flex gap-stack-md mt-auto pt-stack-sm">
+<div>
+<div class="font-headline-sm text-headline-sm text-on-surface">6</div>
+<div class="font-label-sm text-label-sm text-error flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-error block"></span> Busy
+                            </div>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm text-on-surface">2</div>
+<div class="font-label-sm text-label-sm text-primary flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary block"></span> Idle
+                            </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Split Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Live Activity Feed -->
+<div class="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter flex flex-col h-[500px]">
+<div class="flex items-center justify-between border-b border-outline-variant pb-stack-sm mb-stack-md">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Live Activity</h3>
+<span class="font-label-sm text-label-sm text-primary bg-primary/10 px-2 py-1 rounded-full flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span> Streaming
+                        </span>
+</div>
+<div class="overflow-y-auto pr-base space-y-stack-md flex-1">
+<!-- Feed Item 1 -->
+<div class="flex items-start gap-stack-sm group">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0 text-primary mt-1">
+<span class="material-symbols-outlined text-[18px]">edit_document</span>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-body-md text-on-surface">
+<span class="font-label-md font-semibold">Writing Agent</span> drafted client email
+                                </p>
+<div class="flex items-center gap-stack-sm mt-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">2m ago</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-sm text-label-sm text-error font-semibold">-$0.05</span>
+</div>
+</div>
+</div>
+<!-- Feed Item 2 -->
+<div class="flex items-start gap-stack-sm group">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0 text-secondary mt-1">
+<span class="material-symbols-outlined text-[18px]">travel_explore</span>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-body-md text-on-surface">
+<span class="font-label-md font-semibold">Research Agent</span> searching web for market trends
+                                </p>
+<div class="flex items-center gap-stack-sm mt-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">5m ago</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">In progress</span>
+</div>
+</div>
+</div>
+<!-- Feed Item 3 -->
+<div class="flex items-start gap-stack-sm group">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0 text-tertiary mt-1">
+<span class="material-symbols-outlined text-[18px]">data_check</span>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-body-md text-on-surface">
+<span class="font-label-md font-semibold">Data Agent</span> verified Q3 financial records
+                                </p>
+<div class="flex items-center gap-stack-sm mt-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">12m ago</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-sm text-label-sm text-error font-semibold">-$0.12</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Needs Attention -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter flex flex-col h-[500px]">
+<div class="flex items-center justify-between border-b border-outline-variant pb-stack-sm mb-stack-md">
+<h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+                            Needs Attention
+                            <span class="bg-error text-on-error font-label-sm text-label-sm px-2 py-0.5 rounded-full">2</span>
+</h3>
+</div>
+<div class="space-y-stack-md flex-1 overflow-y-auto">
+<!-- Alert 1 -->
+<div class="border border-outline-variant rounded-lg p-stack-sm bg-surface">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-sm text-label-sm bg-secondary-container/20 text-secondary px-2 py-1 rounded">Approval Required</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">10m ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mb-stack-sm">Marketing Agent requesting $5.00 budget increase for ad campaign analysis.</p>
+<div class="flex gap-2">
+<button class="flex-1 bg-primary text-on-primary py-1 px-3 rounded font-label-md text-label-md hover:bg-primary/90 transition-colors">Approve</button>
+<button class="flex-1 border border-outline-variant text-on-surface-variant py-1 px-3 rounded font-label-md text-label-md hover:bg-surface-variant transition-colors">Review</button>
+</div>
+</div>
+<!-- Alert 2 -->
+<div class="border border-outline-variant rounded-lg p-stack-sm bg-surface">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-sm text-label-sm bg-error-container/50 text-on-error-container px-2 py-1 rounded">Error</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">1h ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mb-stack-sm">Support Agent halted. API endpoint unavailable for customer database.</p>
+<div class="flex gap-2">
+<button class="flex-1 border border-outline-variant text-on-surface-variant py-1 px-3 rounded font-label-md text-label-md hover:bg-surface-variant transition-colors">View Logs</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="mt-auto full-width py-stack-md border-t border-outline-variant bg-surface dark:bg-surface-container-lowest">
+<div class="max-w-container-max mx-auto px-margin-desktop flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant dark:text-outline">© 2024 Orbicrew by Leangine</span>
+<div class="flex gap-stack-md">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline transition-all" href="#">Privacy Policy</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline transition-all" href="#">Terms of Service</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline transition-all" href="#">Documentation</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline transition-all" href="#">Support</a>
+</div>
+</div>
+</footer>
+</main>
+</body></html>

@@ -15,6 +15,7 @@ This is the onboarding note for the Orbicrew development workspace (Cursor + Cla
 - Cost-first architecture: model router + budget guard + self-hosted LiteLLM
 - Overnight autonomy with approval gates and morning summaries
 - End state: multi-tenant SaaS (Managed + BYO-API)
+- Admin surfaces: tenant settings in the product UI; platform operator console as protected `/admin` in `orbicrew-web` (not a separate repo)
 
 Product docs (source of truth):
 
@@ -32,6 +33,7 @@ orbicrew_development/          ← personal GitHub (master workspace)
 ├── .cursor/rules/
 ├── docs/development/          ← YOU ARE HERE (process)
 ├── docs/leangine-office-docs/ ← product requirements
+├── resources/                 ← logos + Stitch UI/UX (master-only)
 ├── repos/                     ← org GitHub project clones
 │   ├── orbicrew-web/
 │   ├── orbicrew-api/
@@ -42,7 +44,7 @@ orbicrew_development/          ← personal GitHub (master workspace)
 
 | GitHub | What |
 |---|---|
-| Personal — [meetrakib/orbicrew_master](https://github.com/meetrakib/orbicrew_master) | This master workspace (docs + agent config) |
+| Personal — [meetrakib/orbicrew_master](https://github.com/meetrakib/orbicrew_master) | This master workspace (docs + agent config + resources) |
 | Org — [leangine](https://github.com/leangine) | Nested repos under `repos/` |
 
 ### Repository URLs
@@ -54,6 +56,15 @@ orbicrew_development/          ← personal GitHub (master workspace)
 | `orbicrew-api` | https://github.com/leangine/orbicrew-api | `repos/orbicrew-api` |
 | `orbicrew-channels` | https://github.com/leangine/orbicrew-channels | `repos/orbicrew-channels` |
 | `orbicrew-infra` | https://github.com/leangine/orbicrew-infra | `repos/orbicrew-infra` |
+
+### Master-only resources
+
+| Path | Use for |
+|---|---|
+| `resources/logos/` | Brand logos (folder may start empty; tracked) |
+| `resources/stitch_orbicrew_ui_ux_guide/` | Stitch screen exports for dashboard/admin UI |
+
+Stitch folders: `orbicrew` (DESIGN), `orbicrew_agent_configuration`, `orbicrew_agent_roster`, `orbicrew_approvals_inbox`, `orbicrew_dashboard_overview`, `orbicrew_hire_ai_employees`, `orbicrew_message_agents`, `orbicrew_settings`, `orbicrew_task_detail`, `orbicrew_usage_billing`.
 
 ---
 
@@ -83,10 +94,12 @@ Feature work: branch from `dev`, merge back to `dev`, promote `dev` → `stage` 
 
 | Work | Repo |
 |---|---|
-| Web UI, dashboard, Orbit View | `repos/orbicrew-web` |
+| Web UI, dashboard, tenant settings, platform `/admin`, Orbit View | `repos/orbicrew-web` |
 | FastAPI, LangGraph, router, DB, workers | `repos/orbicrew-api` |
 | Messaging adapters | `repos/orbicrew-channels` |
 | Compose, deploy, shared ops | `repos/orbicrew-infra` |
+
+**Admin decision:** no fifth `orbicrew-admin` repo. Tenant admin lives in Standard Dashboard settings; platform operator console is a protected area of `orbicrew-web` (Phase 2). Split later only if operator deploy/auth needs diverge.
 
 Scaffold only until Phase development starts — do not invent large feature code ahead of the phase plan.
 
@@ -100,16 +113,18 @@ Scaffold only until Phase development starts — do not invent large feature cod
 - Do **not** force-push protected branches unless asked.
 - Do **not** fork Agent Town into the product — Orbit View is original IP.
 - Prefer cost-control infrastructure before flashy UI or a huge agent roster.
+- **Nested repo isolation:** when editing under `repos/<name>/`, never reference master-only paths (`docs/`, `resources/`, `local/`, `orbicrew_master`, workspace layout). Nested READMEs/code must stand alone. Sibling **GitHub** URLs are OK.
+- **Coding principles:** follow best practices; prefer reusable shared abstractions (DRY) over copy-paste.
 
 ---
 
 ## 7. Ignore files (know the difference)
 
-| File | Ignores `local/`? | Ignores `repos/` content? | Must ignore `.env`? |
-|---|---|---|---|
-| `.gitignore` | Yes | Yes (keeps README/.gitkeep) | Yes |
-| `.cursorignore` | **No** | No | Yes |
-| `.claudeignore` | **No** | No | Yes |
+| File | Ignores `local/`? | Ignores `repos/` content? | Ignores `resources/`? | Must ignore `.env`? |
+|---|---|---|---|---|
+| `.gitignore` | Yes | Yes (keeps README/.gitkeep) | **No** (tracked) | Yes |
+| `.cursorignore` | **No** | No | No | Yes |
+| `.claudeignore` | **No** | No | No | Yes |
 
 ---
 
@@ -119,3 +134,4 @@ Scaffold only until Phase development starts — do not invent large feature cod
 2. Open the active phase in `phase_by_phase_development_plan.md`.
 3. Confirm which `repos/<service>` you will touch.
 4. Implement → update manual test guide → update tracker.
+5. If building UI: consult `resources/stitch_orbicrew_ui_ux_guide/` and `resources/logos/`; copy assets into `orbicrew-web` as needed.

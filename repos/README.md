@@ -20,20 +20,26 @@ Master workspace (personal): https://github.com/meetrakib/orbicrew_master
 ```
 repos/
 ├── README.md              ← this file (tracked by master)
-├── orbicrew-web/          ← Next.js + React + TypeScript (dashboard + Orbit View)
+├── orbicrew-web/          ← Next.js + React + TypeScript (dashboard, /admin, Orbit View)
 ├── orbicrew-api/          ← Python FastAPI + LangGraph + workers
 ├── orbicrew-channels/     ← Telegram / Discord / WhatsApp thin adapters
 └── orbicrew-infra/        ← Docker Compose, deploy, shared ops
 ```
 
-## Why these four
+## Why these four (no fifth admin repo)
 
 | Repo | Why it exists |
 |---|---|
-| `orbicrew-web` | Interface layer for Standard Dashboard and Orbit View; separate deploy/scale from Python orchestration |
+| `orbicrew-web` | Interface layer: Standard Dashboard, tenant settings, platform operator `/admin`, Orbit View; separate deploy/scale from Python orchestration |
 | `orbicrew-api` | Orchestration core (Office Manager, router, budget guard, DB, billing); workers ship from same Python codebase initially |
 | `orbicrew-channels` | Multi-channel adapters must stay thin and independently releasable; proves “one backend, many faces” |
 | `orbicrew-infra` | Local Compose + staging/prod topology without coupling ops scripts to a single app repo |
+
+Platform admin is **not** a separate org repo. Tenant admin + operator console live in `orbicrew-web` (see phase plan). Split later only if justified.
+
+## Nested repos must stand alone
+
+Each `repos/<name>/` is independently consumable on GitHub. Files inside a nested repo must **not** reference this master workspace, `docs/`, `resources/`, `local/`, or sibling local paths. Sibling links by GitHub URL are fine.
 
 ## Branch strategy (every repo)
 

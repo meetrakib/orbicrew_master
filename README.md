@@ -2,7 +2,7 @@
 
 Personal agentic coding workspace for **Orbicrew, by Leangine** — an AI employee office platform (multi-agent orchestration, cost-controlled model routing, standard dashboard + Orbit View, multi-channel adapters).
 
-This repository is the **master workspace**: docs, agent instructions, and pointers. Application code lives in **nested org repos** under `repos/`.
+This repository is the **master workspace**: docs, agent instructions, shared `resources/`, and pointers. Application code lives in **nested org repos** under `repos/`.
 
 ## Setup philosophy
 
@@ -18,6 +18,7 @@ orbicrew_development/          ← this repo (personal GitHub)
 ├── docs/
 │   ├── development/           ← phase plan, test guide, tracker, bootstrap
 │   └── leangine-office-docs/  ← product & technical requirements
+├── resources/                 ← logos + Stitch UI/UX guide (tracked)
 ├── repos/                     ← org GitHub clones (gitignored contents)
 │   ├── orbicrew-web/
 │   ├── orbicrew-api/
@@ -30,10 +31,28 @@ orbicrew_development/          ← this repo (personal GitHub)
 
 | Location | GitHub | Purpose |
 |---|---|---|
-| Workspace root (this repo) | **Personal** — [meetrakib/orbicrew_master](https://github.com/meetrakib/orbicrew_master) | Docs, agent config, development process |
+| Workspace root (this repo) | **Personal** — [meetrakib/orbicrew_master](https://github.com/meetrakib/orbicrew_master) | Docs, agent config, development process, `resources/` |
 | `repos/*` | **Org** — [leangine](https://github.com/leangine) | Product services and infra |
 
 Nested repo contents under `repos/` are **not** committed to the master repo. Only `repos/README.md` (and optionally `.gitkeep`) is tracked so the folder exists when you clone.
+
+## Admin surfaces (decision)
+
+| Surface | Where | Phase |
+|---|---|---|
+| Tenant settings (billing, seats, roles, per-agent kill switches) | `orbicrew-web` Standard Dashboard / settings | Phase 2 |
+| Platform operator console (cross-tenant cost, tenant lifecycle, platform-wide kill switch) | Protected `/admin` in `orbicrew-web` | Phase 2 |
+
+**No separate `orbicrew-admin` GitHub repo** unless operator auth/deploy later diverges enough to justify a split.
+
+## Resources (master-only)
+
+| Path | Contents |
+|---|---|
+| [`resources/logos/`](resources/logos/) | Brand logos (may be empty until assets are added) |
+| [`resources/stitch_orbicrew_ui_ux_guide/`](resources/stitch_orbicrew_ui_ux_guide/) | Stitch UI/UX screen exports for dashboard work |
+
+See [`resources/README.md`](resources/README.md). Agents building web/admin UI should use these; copy into `orbicrew-web` as needed. Nested org repos must not hard-depend on this folder.
 
 ## Docs map
 
@@ -83,8 +102,11 @@ cd ..
 # 3. Open in Cursor / Claude Code and follow AGENT_BOOTSTRAP.md
 ```
 
+Org repos are also cloneable **standalone** — their READMEs must not require this master workspace.
+
 ## What not to do
 
 - Do not commit secrets (`.env*`), `local/`, or nested `repos/*` application trees into the master repo.
 - Do not build product features in the master repo root — implement in the appropriate `repos/<service>/`.
+- Do not put master-workspace paths into nested org repo files.
 - Do not treat Agent Town as a fork target; Orbit View is original IP (see product docs).

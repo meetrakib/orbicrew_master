@@ -12,16 +12,26 @@ Read `docs/development/AGENT_BOOTSTRAP.md` at session start for full onboarding.
 - `docs/leangine-office-docs/` — product & tech requirements (source of truth for *what*)
 - `docs/development/` — phase plan, manual tests, tracker (source of truth for *process*)
 - `repos/` — nested org git repos where product code lives
+- `resources/` — master-only brand/UI assets (`logos/`, `stitch_orbicrew_ui_ux_guide/`)
 - `local/` — private scratch — **never read unless the user explicitly asks**
 
 ## Ownership
 
-- Master workspace git = personal GitHub `https://github.com/meetrakib/orbicrew_master` (docs + agent config only)
+- Master workspace git = personal GitHub `https://github.com/meetrakib/orbicrew_master` (docs + agent config + `resources/`)
 - `repos/*` = Leangine org GitHub — commit code inside the nested repo, not into master
-  - web: `https://github.com/leangine/orbicrew-web`
+  - web: `https://github.com/leangine/orbicrew-web` (includes tenant UI + platform `/admin`)
   - api: `https://github.com/leangine/orbicrew-api`
   - channels: `https://github.com/leangine/orbicrew-channels`
   - infra: `https://github.com/leangine/orbicrew-infra`
+
+## Nested repo isolation
+
+When editing under `repos/<name>/`, never reference master-only paths (`docs/`, `resources/`, `local/`, workspace layout). Nested repos must stay standalone. See `nested-repos.mdc`.
+
+## Coding principles
+
+- Follow language/framework best practices for the stack in use.
+- Prefer reusable shared abstractions (DRY, shared packages/patterns) over copy-paste across services — extract when duplication is real, not speculative.
 
 ## Workflow
 

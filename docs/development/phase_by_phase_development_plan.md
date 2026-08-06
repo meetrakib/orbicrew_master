@@ -19,6 +19,23 @@ Living engineering plan for this workspace. Derived from product docs under `doc
 3. **Multi-tenant schema thinking early** — include `tenant_id` from day one even when Phase 0 is single-user; turn on RLS/billing in Phase 2.
 4. **One backend, many faces** — adapters stay thin; no agent logic in channels or UI.
 5. **Exit criteria are usage-based**, not “code exists.”
+6. **Prefer reusable shared abstractions** (DRY / shared packages) when building across services — follow stack best practices.
+
+---
+
+## Admin surfaces (decision)
+
+Product docs call for (a) tenant-side admin (roles, billing, per-agent kill switches) and (b) Leangine-side ops (aggregate cost monitoring, platform-wide kill switch). **Decision: no separate `orbicrew-admin` repo.**
+
+| Surface | Audience | Home | Phase |
+|---|---|---|---|
+| Tenant settings | Tenant owner/admin | `orbicrew-web` Standard Dashboard / settings (billing, seats, roles, agent kill switches) | Phase 2 |
+| Platform operator console | Leangine operators | Protected route group in `orbicrew-web` (e.g. `/admin`) — separate authz from tenant users | Phase 2 |
+| Operator APIs | Same | `orbicrew-api` privileged endpoints (RLS-aware, operator role) | Phase 2 |
+
+Revisit a fifth repo only if operator deploy cadence, auth IdP, or network isolation clearly diverges from the customer app. Until then, keep one web codebase with hard authz boundaries.
+
+UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_ui_ux_guide/` and `resources/logos/` (copy into web as needed; never hard-link nested repos to master paths).
 
 ---
 
@@ -26,10 +43,10 @@ Living engineering plan for this workspace. Derived from product docs under `doc
 
 | Phase | Primary repos |
 |---|---|
-| Setup (this session) | Master workspace + scaffold all `repos/*` |
+| Setup | Master workspace + scaffold all `repos/*` |
 | 0 — Personal tool | `orbicrew-api`, `orbicrew-web`, `orbicrew-infra` |
 | 1 — Overnight + channels | + `orbicrew-channels` (Telegram/WhatsApp); deepen api/infra |
-| 2 — Multi-tenancy & pricing | `orbicrew-api`, `orbicrew-web` (billing/agent admin UI) |
+| 2 — Multi-tenancy & pricing | `orbicrew-api`, `orbicrew-web` (tenant settings + platform `/admin`) |
 | 3 — Differentiation | `orbicrew-web` (Orbit View), channels (Discord), integrations |
 
 ---
@@ -40,10 +57,12 @@ Living engineering plan for this workspace. Derived from product docs under `doc
 
 | Task | Detail | Status |
 |---|---|---|
-| Master git + ignores | Root git; ignore `local/`, `repos/*` contents, secrets | Done — remote `https://github.com/meetrakib/orbicrew_master` |
-| Agent instructions | `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, bootstrap | Done |
+| Master git + ignores | Root git; ignore `local/`, `repos/*` contents, secrets; track `resources/` | Done — remote `https://github.com/meetrakib/orbicrew_master` |
+| Agent instructions | `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, bootstrap | Done (nested isolation + DRY principles) |
 | Process docs | This plan, tracker, manual test guide | Done |
 | Scaffold org repos | `orbicrew-web`, `orbicrew-api`, `orbicrew-channels`, `orbicrew-infra` with `main`/`stage`/`dev` | Done — remotes pushed to `leangine/*` |
+| Nested README scrub | Org repos self-contained (no master-workspace references) | Done |
+| Admin planning | Platform `/admin` + tenant settings in `orbicrew-web`; no 5th repo | Done — documented |
 
 **Exit criteria:** a new agent can read `AGENT_BOOTSTRAP.md` and know where to work without a human re-briefing the product. **Met.** Org remotes connected and `main`/`stage`/`dev` pushed.
 
@@ -103,13 +122,15 @@ Living engineering plan for this workspace. Derived from product docs under `doc
 | # | Task | Detail | Depends on | Repos |
 |---|---|---|---|---|
 | 2.1 | Tenant model + RLS | Full multi-tenant enforcement | Phase 1 stable | api |
-| 2.2 | Billing / subscriptions | Stripe (or similar) + usage records / tiers | 2.1 | api, web |
+| 2.2 | Billing / subscriptions | Stripe (or similar) + usage records / tiers; tenant billing UI | 2.1 | api, web |
 | 2.3 | BYO key management | Encrypted keys; LiteLLM virtual/tenant routing | 2.1 | api, web |
 | 2.4 | Agent CRUD UI | User create/edit/delete agents (Memory/Skills/Soul/Setting) | 2.1 | web, api |
-| 2.5 | Project isolation | `project_id` scoping per hallucination/isolation docs | 2.1 | api, web |
-| 2.6 | Pilot | 3–5 real agencies/freelancers | all above | — |
+| 2.5 | Tenant settings admin | Seats/roles, per-agent kill switches, plan limits in Dashboard settings | 2.1 | web, api |
+| 2.6 | Platform operator `/admin` | Protected operator console: cross-tenant cost, tenant lifecycle, platform-wide kill switch | 2.1 | web, api |
+| 2.7 | Project isolation | `project_id` scoping per hallucination/isolation docs | 2.1 | api, web |
+| 2.8 | Pilot | 3–5 real agencies/freelancers | all above | — |
 
-**Exit criteria:** ≥3 paying or committed pilots generating real usage data.
+**Exit criteria:** ≥3 paying or committed pilots generating real usage data; operators can monitor aggregate cost and halt autonomy platform-wide.
 
 ---
 

@@ -23,9 +23,19 @@ Canonical docs: `docs/leangine-office-docs/` — start at `tech/00_INDEX.md` and
 | `docs/leangine-office-docs/` | Product & tech requirements | Source of truth for what to build |
 | `docs/development/` | Phase plan, test guide, tracker, bootstrap | Process source of truth |
 | `repos/` | Nested org project git repos | Implement features here |
+| `resources/` | Logos + Stitch UI/UX guide | Master-only; use for branding/UI work |
 | `local/` | Private scratch / personal materials | **Do not read unless the user explicitly asks** |
 
 **Git ownership:** master workspace = personal GitHub ([meetrakib/orbicrew_master](https://github.com/meetrakib/orbicrew_master)). Nested `repos/*` = Leangine org GitHub. Do not commit nested repo contents into the master repo.
+
+### Master-only assets (`resources/`)
+
+| Path | Contents |
+|---|---|
+| `resources/logos/` | Brand logos (populate as assets arrive; folder tracked via `.gitkeep`) |
+| `resources/stitch_orbicrew_ui_ux_guide/` | Stitch exports: `orbicrew` (DESIGN), agent configuration/roster, approvals inbox, dashboard overview, hire AI employees, message agents, settings, task detail, usage/billing |
+
+Use these when building Standard Dashboard or platform `/admin` UI. Copy needed files into `orbicrew-web` — never make nested repos depend on `resources/` paths.
 
 ---
 
@@ -36,7 +46,7 @@ Canonical docs: `docs/leangine-office-docs/` — start at `tech/00_INDEX.md` and
 3. **After each development slice:** update `docs/development/manual-test-guide.md` if new or changed manual verification steps exist.
 4. **After completing work:** append an entry to `docs/development/development-tracker.md`.
 
-Do **not** build product features in the workspace root — only docs, agent config, and scaffolding.
+Do **not** build product features in the workspace root — only docs, agent config, resources, and scaffolding.
 
 ---
 
@@ -44,15 +54,21 @@ Do **not** build product features in the workspace root — only docs, agent con
 
 | Repo | GitHub | Path | Stack (intent) | Owns |
 |---|---|---|---|---|
-| `orbicrew-web` | https://github.com/leangine/orbicrew-web | `repos/orbicrew-web` | Next.js, React, TypeScript | Standard Dashboard, auth session UI, Orbit View chrome + Phaser world |
+| `orbicrew-web` | https://github.com/leangine/orbicrew-web | `repos/orbicrew-web` | Next.js, React, TypeScript | Standard Dashboard, tenant settings, platform `/admin`, Orbit View |
 | `orbicrew-api` | https://github.com/leangine/orbicrew-api | `repos/orbicrew-api` | Python, FastAPI, LangGraph | Orchestration, router, budget guard, DB, billing, workers |
 | `orbicrew-channels` | https://github.com/leangine/orbicrew-channels | `repos/orbicrew-channels` | TypeScript or Python (TBD) | Thin Telegram / Discord / WhatsApp adapters |
 | `orbicrew-infra` | https://github.com/leangine/orbicrew-infra | `repos/orbicrew-infra` | Docker Compose, scripts | Local stack, deploy topology, shared CI/ops templates |
 
-When editing a nested repo:
+**No separate `orbicrew-admin` repo** unless later re-scoped. Platform operator console = protected routes in `orbicrew-web` (Phase 2).
 
-- Use that repo's own git history (`cd repos/<name>`).
-- Do not `git add` nested `.git` trees into the master workspace commit.
+### Nested repo isolation (critical)
+
+When editing files under `repos/<name>/`:
+
+- Never reference the master workspace, `orbicrew_master`, `docs/`, `resources/`, `local/`, or sibling **local** paths.
+- Nested repos must remain independently consumable (clone-only from GitHub org).
+- Sibling links by **GitHub URL** are OK.
+- Use that repo's own git history (`cd repos/<name>`). Do not `git add` nested trees into the master commit.
 - Prefer opening / focusing work inside the service directory for scoped context.
 
 ---
@@ -68,16 +84,18 @@ When editing a nested repo:
 
 ---
 
-## Coding conventions (from product docs)
+## Coding conventions
 
+- Follow best practices for the language and framework in use.
+- Prefer reusable / shared abstractions (DRY, shared packages and patterns where appropriate) — extract when duplication is real.
 - Prefer latest stable releases of Next.js, React, FastAPI, etc. at time of build — don't pin forever to versions named in aged docs.
 - Frontend owns UI + thin BFF/proxy; backend owns orchestration, LangGraph, LiteLLM calls, DB, billing. Typed OpenAPI + generated TS client preferred.
 - Channel adapters must stay thin — no duplicated agent logic per channel.
-- UI brand: Deep Violet tokens; Bricolage Grotesque (display) + Hanken Grotesk (body). Global English-first product/UI.
+- UI brand: Deep Violet tokens; Bricolage Grotesque (display) + Hanken Grotesk (body). Global English-first product/UI. Prefer Stitch + `resources/` when implementing dashboard/admin screens.
 
 ---
 
 ## Ignore files reminder
 
-- **`.gitignore`:** ignores `local/`, contents of `repos/*` (keeps README/.gitkeep), secrets, deps, build artifacts.
-- **`.cursorignore` / `.claudeignore`:** ignore `.env` variants and build/dep noise; **do not** ignore `local/`, `docs/`, or `repos/`.
+- **`.gitignore`:** ignores `local/`, contents of `repos/*` (keeps README/.gitkeep), secrets, deps, build artifacts. Does **not** ignore `resources/`.
+- **`.cursorignore` / `.claudeignore`:** ignore `.env` variants and build/dep noise; **do not** ignore `local/`, `docs/`, `repos/`, or `resources/`.

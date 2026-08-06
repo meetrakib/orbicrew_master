@@ -61,6 +61,15 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 | 0.A.5.2 | Idempotent re-run | Running again prints "No pending migrations." | Pass (2026-08-07) |
 | 0.A.5.3 | Tables present | `docker exec orbicrew-postgres psql -U orbicrew -d orbicrew -c '\dt'` shows all 13 core tables + `schema_migrations` | Pass (2026-08-07) |
 
+### 0.A.6 Typed API contract (OpenAPI + TS client)
+
+| # | Check | Expected | Status |
+|---|---|---|---|
+| 0.A.6.1 | Codegen from live API | `cd repos/orbicrew-web && npm run codegen:api-types` (API running) → regenerates `src/lib/api-schema.d.ts` with no errors | Pass (2026-08-07) |
+| 0.A.6.2 | Typecheck | `npx tsc --noEmit` in `orbicrew-web` — clean | Pass (2026-08-07) |
+| 0.A.6.3 | Status page still works through typed client | `http://localhost:3000` shows API **healthy**, postgres/redis `ok` | Pass (2026-08-07) |
+| 0.A.6.4 | Chat submit still works through typed client | Submitting a prompt returns a real, non-canned task with matching `TaskResponse` shape (specialist/tier/model/spend/output) | Pass (2026-08-07) — verified by calling `submitTask()` directly against the live API |
+
 ### 0.B Task path (core)
 
 | # | Check | Expected | Status |
@@ -138,6 +147,7 @@ Add dated notes when a manual bug is found in the wild:
 
 | Date | Change |
 |---|---|
+| 2026-08-07 | 0.A.6 added — OpenAPI + TS client (Phase 0.7) typed contract checks, all Pass |
 | 2026-08-07 | 0.B.1 marked Pass — Standard chat GUI (Phase 0.6) verified live via Playwright |
 | 2026-08-07 | 0.B.3/0.B.4 marked Pass — Model Router + Budget Guard (Phase 0.4) verified live |
 | 2026-08-07 | Initial structure created during workspace agentic setup |

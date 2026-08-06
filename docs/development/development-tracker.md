@@ -6,6 +6,44 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — Phase 0.7: OpenAPI + generated TS client
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 0 (Personal tool) — task 0.7
+**Scope:** `orbicrew-web` only — replace the hand-written `Task`/`TaskStep`/`SubmitTaskRequest`-shaped types and manual `fetch` calls in `api-status.ts`/`api-tasks.ts` with a generated OpenAPI contract. No `orbicrew-api` code changes (FastAPI already exposes `/openapi.json` for free).
+
+### Done
+- Added `openapi-typescript` (devDependency) and `openapi-fetch` (dependency) to `orbicrew-web`.
+- `package.json`: new `codegen:api-types` script — `openapi-typescript "${ORBICREW_API_URL:-http://localhost:8000}/openapi.json" -o src/lib/api-schema.d.ts --default-non-nullable false`. Fetches from a running local API rather than reading `orbicrew-api`'s source directly, since the two are independent nested repos (nested-repo isolation) and this keeps `orbicrew-web` buildable from a clone that only has the API's public HTTP contract, not its source.
+- `src/lib/api-schema.d.ts` (new, generated, committed): `paths`/`components`/`operations` types for `/health`, `/ready`, `/v1/tasks`, `/v1/tasks/{task_id}`.
+- `src/lib/api-client.ts` (new): `apiBaseUrl()` (moved here, still `ORBICREW_API_URL`-driven) + a module-level `apiClient = createClient<paths>({ baseUrl: apiBaseUrl() })` (`openapi-fetch`) shared by both callers.
+- `src/lib/api-status.ts` / `src/lib/api-tasks.ts`: rewritten to import types from `components["schemas"][...]` instead of hand-written shapes, and to call `apiClient.GET`/`apiClient.POST` instead of raw `fetch` + manual JSON parsing/casting.
+- `src/app/page.tsx`: one-line fix — `apiStatus.ready.checks` is now optional in the generated type (`checks?`), so `Object.entries(...)` needed `?? {}`.
+
+### Decisions / assumptions
+- **`--default-non-nullable false`** on the codegen command — by default `openapi-typescript` renders any schema property that has a `default` (e.g. `SubmitTaskRequest.channel`, `.input_type`, `.input_lang`) as non-optional in the generated TS type, even though FastAPI's actual OpenAPI `required` array correctly excludes them. That default behavior is meant for response schemas ("the server will always populate this"); for a *request* body type it's wrong — it would force every caller to pass those fields even though the API happily defaults them. Turning the flag off restores the correct optionality from the real `required` array.
+- **`GET /health` and `GET /ready` don't use the `if (res.error)` pattern** — both endpoints document only a `200` response in the OpenAPI schema, so `openapi-fetch`'s `error` field types as unreachable (`never`) for them; TypeScript's control-flow analysis then treats the `if (res.error) {...}` block itself as unreachable dead code and narrows `res` to `never` inside it, breaking any further property access. Used `!res.response.ok || !res.data` instead (checking the raw `Response.ok`, which isn't narrowed away) so a real-world non-2xx (proxy error, unhandled 500) still gets caught at runtime even though the types say it "can't" happen. `POST /v1/tasks` does document a `422` response, so the ordinary `if (error || !data)` pattern works there unchanged.
+- **Generated `api-schema.d.ts` is committed, not gitignored** — regenerating it requires a running `orbicrew-api`, which isn't guaranteed at `orbicrew-web` clone/build time (e.g. CI, or a checkout without the sibling API up). Regenerate via `npm run codegen:api-types` whenever the API's request/response shapes change, then commit the diff.
+- Chose `openapi-fetch` (a typed wrapper around `fetch`) over a heavier generated SDK (e.g. `openapi-generator`) — it's a thin, dependency-light layer that keeps the existing server-action-based, no-browser-CORS calling convention from Phase 0.6 unchanged; only the call site's type-safety improved.
+
+### Manual tests run
+- `npm run codegen:api-types` against the live local API — regenerates cleanly.
+- `npx tsc --noEmit` — clean.
+- `npm run lint` — clean.
+- `curl http://localhost:3000/` — status section still renders `healthy` / postgres+redis `ok` through the new typed client.
+- Directly invoked `submitTask()` (via `npx tsx`, pointed at the live API) with a real prompt — returned a real, non-canned `TaskResponse` (`specialist: "writing"`, `tier: "cheap"`, `model: "claude-haiku-4-5"`, real `spend_so_far_usd`, ordered `steps`), confirming the `openapi-fetch` POST call and generated `TaskResponse` type match the live API exactly.
+
+### Next recommended work
+1. Phase 0.8: voice (optional) once the text chat path is in daily use.
+2. Whenever `orbicrew-api`'s `SubmitTaskRequest`/`TaskResponse` (or new endpoints) change, re-run `npm run codegen:api-types` in `orbicrew-web` and commit the regenerated `api-schema.d.ts` — it will not update itself.
+3. If `GET /v1/tasks/:id` ever gets used from `orbicrew-web` (e.g. polling once Phase 1.1 lands), reuse `apiClient.GET("/v1/tasks/{task_id}", ...)` — the type is already generated.
+
+### Files / repos touched
+- `repos/orbicrew-web`: `package.json`, `package-lock.json`, `src/lib/api-schema.d.ts` (new), `src/lib/api-client.ts` (new), `src/lib/api-status.ts`, `src/lib/api-tasks.ts`, `src/app/page.tsx`
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md` (this entry)
+
+---
+
 ## 2026-08-07 — Phase 0.6: standard chat GUI
 
 **Agent / operator:** Claude Code

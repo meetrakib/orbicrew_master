@@ -6,6 +6,46 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — Dev-branch workflow + admin tech docs
+
+**Agent / operator:** Cursor agent  
+**Phase:** Phase -1 (workspace & agentic setup)  
+**Scope:** Persist `dev`-only daily git workflow (master + org repos); reinforce dedicated `orbicrew-admin` in product/tech docs; verify admin remote — **no product features**
+
+### Done
+
+- Confirmed `repos/orbicrew-admin` origin is `https://github.com/leangine/orbicrew-admin.git` with `main`/`stage`/`dev` on origin.
+- Master: created/pushed `dev` + `stage` (same three-branch model as org repos); day-to-day work on **`dev`**.
+- Documented critical branch rule in `AGENTS.md`, `CLAUDE.md`, `AGENT_BOOTSTRAP.md`, `.cursor/rules/*`, root/`repos` READMEs, phase plan, manual tests, nested READMEs: commit/push only on `dev` unless user explicitly asks for `stage`/`main` or promote.
+- Tech docs: architecture diagram + components (`03`), privileged `/v1/ops/*` (`05`), devops services (`08`), requirements admin/ops note (`01`), index quick link (`00`), kill-switch surfaces (`12`).
+- Nested README branch language + api/admin privileged-API notes; infra mentions admin in first deliverable.
+
+### Decisions / assumptions
+
+- Master `orbicrew_master` uses `main` / `stage` / `dev` like org repos; **daily default is `dev`**.
+- Platform admin remains a dedicated app; auth via privileged APIs on `orbicrew-api`, not `/admin` in web.
+
+### Manual tests run
+
+- Admin `git remote -v` → leangine/orbicrew-admin (pass)
+- Nested remotes/branches already present from prior scaffold (pass)
+
+### Blockers
+
+- None
+
+### Next recommended work
+
+1. Phase 0.1: deps Compose + native api/web health endpoints (on `dev`).
+2. Early admin auth shell when convenient.
+
+### Files / repos touched
+
+- Master: docs, agent rules, README, `repos/README.md` (commit on `dev`)
+- Nested README updates on `dev`: web, admin, api, channels, infra
+
+---
+
 ## 2026-08-07 — Dedicated admin repo + local deps Compose
 
 **Agent / operator:** Cursor agent  

@@ -23,12 +23,12 @@ Do not implement application features at the workspace root.
 3. **After a development slice:** update `docs/development/manual-test-guide.md` when test steps change.
 4. **After finishing work:** update `docs/development/development-tracker.md`.
 5. Nested `repos/*` = Leangine org GitHub; this root = personal GitHub (`https://github.com/meetrakib/orbicrew_master`). Commit inside the nested repo for code changes; commit here for docs/agent config/resources.
-6. Branches in org repos: `main` (prod), `stage`, `dev` (default work).
+6. **Branch workflow:** work, commit, and push only on **`dev`** (master workspace and all `repos/*`). Promote/use `stage` or `main` only when the user explicitly asks.
 7. No secrets in commits. No force-push to protected branches unless asked.
 8. **Nested repo isolation:** when editing under `repos/<name>/`, never reference master-only paths (`docs/`, `resources/`, `local/`, workspace layout, `orbicrew_master`). Nested repos must stay independently consumable. Sibling GitHub URLs are OK.
 9. **Coding principles:** follow best practices; prefer reusable shared abstractions (DRY / shared packages) over copy-paste.
 10. **Local infra:** shared deps via `resources/orbicrew_dev_infra/`; run apps natively (not in Docker) during development.
-11. **Platform admin:** dedicated `repos/orbicrew-admin` — not embedded `/admin` in web.
+11. **Platform admin:** dedicated `repos/orbicrew-admin` — not embedded `/admin` in web. Operator UI calls privileged APIs on `orbicrew-api`.
 
 ---
 
@@ -46,7 +46,7 @@ Do not implement application features at the workspace root.
 | Phase / tests / session log | `docs/development/` |
 | Logos / Stitch UI references | `resources/logos`, `resources/stitch_orbicrew_ui_ux_guide` |
 
-Platform operator UI is the dedicated `orbicrew-admin` repo (scaffold/auth shell early; full features with Phase 2). Tenant settings remain in `orbicrew-web`.
+Platform operator UI is the dedicated `orbicrew-admin` repo (scaffold/auth shell early; full features with Phase 2). Tenant settings remain in `orbicrew-web`. Admin auth targets privileged `orbicrew-api` operator endpoints.
 
 Launch Claude Code from the nested service directory when doing deep work on that service to keep context focused. Root `CLAUDE.md` / `AGENTS.md` still apply for master-side work; do not bake master paths into nested-repo files.
 

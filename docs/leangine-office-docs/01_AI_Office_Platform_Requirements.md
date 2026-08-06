@@ -321,7 +321,7 @@ This confirms and extends the existing `03_system_design.md` Section 5 (Auto/Man
 
 - Per-tenant usage dashboard: cost so far, tasks run, rate-limit status — needed for both trust and support.
 
-- Admin/ops view (your side): aggregate cost monitoring across all tenants, since managed-platform tenants' model spend is your direct cost.
+- Admin/ops view (your side): aggregate cost monitoring across all tenants, since managed-platform tenants' model spend is your direct cost. **Implementation:** dedicated `orbicrew-admin` app (separate Next.js deployable), calling privileged operator APIs on `orbicrew-api` — not an `/admin` route inside the tenant `orbicrew-web` dashboard.
 
 ## 9. Feature Checklist for a Sellable Product
 

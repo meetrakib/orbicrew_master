@@ -38,7 +38,7 @@ repos/
 | `orbicrew-channels` | Multi-channel adapters must stay thin and independently releasable; proves “one backend, many faces” |
 | `orbicrew-infra` | Staging/prod Compose + ops without coupling scripts to a single app repo |
 
-Tenant-facing settings stay in `orbicrew-web`. Platform operators use `orbicrew-admin`.
+Tenant-facing settings stay in `orbicrew-web`. Platform operators use `orbicrew-admin` (privileged APIs on `orbicrew-api`).
 
 ## Local shared dependencies (master-only)
 
@@ -52,7 +52,9 @@ Each `repos/<name>/` is independently consumable on GitHub. Files inside a neste
 
 - `main` — production-ready (GitHub default)
 - `stage` — staging
-- `dev` — default development branch
+- `dev` — **daily working branch** — commit and push here by default
+
+Do not push feature work to `main` or `stage` unless explicitly asked. Promote `dev` → `stage` → `main` only on request.
 
 ## Clone
 

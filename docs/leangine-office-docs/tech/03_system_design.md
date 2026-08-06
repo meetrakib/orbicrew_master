@@ -19,17 +19,18 @@ Part of the AI Employee Office Platform documentation set. See `00_INDEX.md` for
 ```mermaid
 flowchart TB
     subgraph Interfaces["Interface Layer"]
-        UI1["Orbit View<br/>(Phaser + Next.js)"]
-        UI2["Standard Chat GUI<br/>(Next.js dashboard)"]
+        UI1["Orbit View<br/>(Phaser + Next.js)<br/>orbicrew-web"]
+        UI2["Standard Dashboard<br/>(Next.js tenant UI)<br/>orbicrew-web"]
+        UI7["Platform Admin Console<br/>(Next.js operator UI)<br/>orbicrew-admin"]
         UI3["Telegram Bot"]
         UI4["Discord Bot"]
         UI5["WhatsApp Business"]
         UI6["Voice Pipeline<br/>(Pipecat/LiveKit)"]
     end
 
-    GW["API Gateway<br/>(auth, rate limit, tenant routing)"]
+    GW["API Gateway<br/>(auth, rate limit, tenant / operator routing)"]
 
-    subgraph Core["Orchestration Core"]
+    subgraph Core["Orchestration Core — orbicrew-api"]
         OM["Office Manager Agent<br/>(LangGraph supervisor)"]
         RT["Model Router<br/>(classify -> tier select -> cache check)"]
         BG["Budget Guard<br/>(per-task / per-tenant caps)"]
@@ -72,7 +73,10 @@ flowchart TB
     TQ --> RD
     OM -->|"consolidated result"| GW
     GW -->|"response"| Interfaces
+    UI7 -.->|"privileged /v1/ops/*"| GW
 ```
+
+**Deployable apps (repos):** `orbicrew-web` (tenant product UI: Standard Dashboard + Orbit View), `orbicrew-admin` (dedicated platform operator console — not an `/admin` route inside web), `orbicrew-api` (orchestration + privileged operator APIs), `orbicrew-channels` (thin messaging adapters), `orbicrew-infra` (deploy topology).
 
 ---
 
@@ -80,7 +84,9 @@ flowchart TB
 
 | Component | Responsibility | Primary tech |
 |---|---|---|
-| API Gateway | Authenticates requests, resolves tenant ID, applies rate limits per pricing tier | Custom (Next.js API routes or a lightweight Fastify/Express service) |
+| Tenant product UI | Standard Dashboard, tenant settings, Orbit View chrome | Next.js app — `orbicrew-web` |
+| Platform operator console | Cross-tenant cost, tenant lifecycle, platform-wide kill switch; separate deploy/auth from tenants | Next.js app — `orbicrew-admin` |
+| API Gateway | Authenticates requests, resolves tenant ID or operator identity, applies rate limits per pricing tier | FastAPI (preferred) / lightweight gateway in `orbicrew-api` |
 | Office Manager Agent | Receives normalized task input, plans, decides which specialist agent(s) are needed, consolidates results | LangGraph supervisor graph |
 | Model Router | Classifies task complexity/category, selects cheapest sufficient model tier, checks prompt cache | Custom service, LangGraph node |
 | Budget Guard | Enforces hard per-task and per-tenant token/dollar ceilings before and during execution | Custom middleware around model calls |
@@ -316,7 +322,7 @@ This maps directly to a `agents` table (see `04_database_design.md`) and is expo
 
 | Layer | Choice | Why |
 |---|---|---|
-| Frontend framework | Next.js 16 + React 19 + TypeScript | Strong ecosystem, good SSR for dashboard-style pages; also the natural home for Orbit View's surrounding chrome (top bar, chat dock, decoration palette — see `18_orbit_view_game_ui.md` Section 10.1) alongside the canvas-rendered scene itself |
+| Frontend framework | Next.js 16 + React 19 + TypeScript | Two apps: `orbicrew-web` (tenant dashboard + Orbit View chrome — see `18_orbit_view_game_ui.md` Section 10.1) and dedicated `orbicrew-admin` (platform operator console). Same stack family; separate deployables and authz |
 | Game/avatar layer | Phaser 3 + Tiled | Open source; auto-selects canvas/WebGL rendering; good tooling for the tile-and-sprite approach specified in `18_orbit_view_game_ui.md` Section 2 — chosen as a rendering engine on its own technical merits, not because it's what the Agent Town reference uses |
 | Orchestration | LangGraph (Python) | Fine-grained control over routing, state persistence, checkpointing — needed for overnight autonomy |
 | Task queue | Redis + BullMQ/Celery | Mature, simple, well-understood at small-to-mid scale |
@@ -342,7 +348,8 @@ Per your instruction to reuse open source wherever it genuinely covers the need:
 | Animated office UI | Custom-built (own IP, not forked) — see below | Everything: rendering, room/decor system, idle-behavior simulation, scripting sandbox — this is a from-scratch, brand-owned feature, not an Agent Town fork |
 | Realtime voice pipeline | Pipecat / LiveKit Agents | Multilingual tuning for whichever languages real customers use, integration with our router |
 | STT | Whisper | Accuracy benchmarking/fine-tuning on real customer languages if needed |
-| Standard chat GUI | Open WebUI (evaluate as a base) or custom Next.js | Multi-tenant billing UI, agent management UI, task dashboard — likely custom since Open WebUI isn't built for multi-tenant SaaS billing |
+| Standard chat GUI (tenant) | Custom Next.js (`orbicrew-web`) | Multi-tenant billing UI, agent management UI, task dashboard — Open WebUI may be evaluated as inspiration only |
+| Platform operator UI | Custom Next.js (`orbicrew-admin`) | Cross-tenant ops; calls privileged `orbicrew-api` operator endpoints — never embedded as `/admin` inside the tenant app |
 | Vector memory | pgvector | Memory scoping/retrieval logic per agent |
 | Messaging channels | Telegram Bot API, Discord.js, WhatsApp Cloud API | Our common protocol adapters |
 

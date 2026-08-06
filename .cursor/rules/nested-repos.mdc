@@ -23,11 +23,13 @@ When editing **any file** under `repos/<name>/`:
 - Run git commands from that service directory (`repos/<name>`).
 - Do not stage nested repo files into the **master** workspace commit (master gitignores `repos/*` contents).
 - Prefer the service's own README and `.gitignore`.
-- Default working branch: `dev`. Long-lived: `main`, `stage`, `dev`.
+- **Default:** checkout `dev`, commit on `dev`, push `origin dev`. Long-lived: `main`, `stage`, `dev`.
+- Do **not** push feature work to `main` or `stage` unless the user explicitly asks to use those branches or to merge/promote.
 
 ## Product boundaries
 
 - Keep channel adapters thin; put orchestration in `orbicrew-api`.
-- Platform operator UI lives in `orbicrew-admin` (separate repo), not inside `orbicrew-web`.
+- Platform operator UI lives in `orbicrew-admin` (separate repo), not inside `orbicrew-web` (not an `/admin` route).
 - Tenant settings / Standard Dashboard / Orbit View live in `orbicrew-web`.
+- `orbicrew-admin` calls privileged operator endpoints on `orbicrew-api` (e.g. `/v1/ops/*`).
 - Prefer running this app natively during development; do not assume app services run in Docker.

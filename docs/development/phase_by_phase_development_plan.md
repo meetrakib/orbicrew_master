@@ -30,7 +30,7 @@ Product docs call for (a) tenant-side admin (roles, billing, per-agent kill swit
 | Surface | Audience | Home | Phase |
 |---|---|---|---|
 | Tenant settings | Tenant owner/admin | `orbicrew-web` Standard Dashboard / settings (billing, seats, roles, agent kill switches) | Phase 2 |
-| Platform operator console | Leangine operators | Dedicated `orbicrew-admin` app (separate authz / deploy from tenant users) | Scaffold/auth shell early; full features Phase 2 |
+| Platform operator console | Leangine operators | Dedicated `orbicrew-admin` app (separate authz / deploy; privileged `/v1/ops/*` on `orbicrew-api`) | Scaffold/auth shell early; full features Phase 2 |
 | Operator APIs | Same | `orbicrew-api` privileged endpoints (RLS-aware, operator role) | Phase 2 |
 
 UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_ui_ux_guide/` and `resources/logos/` (copy into web or admin as needed; never hard-link nested repos to master paths).

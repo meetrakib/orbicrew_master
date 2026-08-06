@@ -48,9 +48,11 @@ flowchart TD
 
 | Service | Container | Notes |
 |---|---|---|
-| Orchestration backend (LangGraph + API) | Python-based image | Keep this the smallest, most frequently deployed unit |
-| Frontend (Next.js) | Node-based image, or deploy via Vercel/Netlify free-to-cheap tier instead of self-hosting | Vercel's free tier is genuinely sufficient for Phase 0/1 traffic — consider it over self-hosting the frontend to reduce ops burden |
+| Orchestration backend (LangGraph + API) — `orbicrew-api` | Python-based image | Keep this the smallest, most frequently deployed unit; hosts tenant APIs and privileged `/v1/ops/*` for the operator console |
+| Tenant frontend (Next.js) — `orbicrew-web` | Node-based image, or deploy via Vercel/Netlify free-to-cheap tier instead of self-hosting | Vercel's free tier is genuinely sufficient for Phase 0/1 traffic — consider it over self-hosting the frontend to reduce ops burden |
+| Platform admin frontend (Next.js) — `orbicrew-admin` | Separate Node-based image / hosting project from tenant web | Dedicated operator console; restrict network access (VPN / allowlist) when it matters; never ship as `/admin` inside `orbicrew-web` |
 | Task workers (specialist agent execution) | Separate Python image from the API — scales independently of request-serving traffic | Important: don't run long agent tasks in the same process handling HTTP requests |
+| Channel adapters — `orbicrew-channels` | Lightweight image(s) per channel process as needed | Thin adapters only |
 | Sandboxed code execution | Isolated container per task-step, ephemeral, torn down after use | Per the security model in `06_security_and_scalability.md` Section 5 |
 
 **Recommendation**: use **Docker Compose** for local dev and staging; for production, plain `docker run`/systemd-managed containers on a single Hetzner box is entirely sufficient through Phase 0-1 — **don't reach for Kubernetes** until you have a real multi-instance scaling need (likely not before mid-Phase 2). Kubernetes overhead on a solo-founder cost-conscious project works against the entire premise of this platform.

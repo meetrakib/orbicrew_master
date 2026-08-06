@@ -84,6 +84,7 @@ Stitch folders: `orbicrew` (DESIGN), `orbicrew_agent_configuration`, `orbicrew_a
 | When | Action |
 |---|---|
 | Before development | Follow `phase_by_phase_development_plan.md` — only current phase work unless user overrides |
+| During development | Checkout **`dev`**, implement, commit, push **`origin dev`** (master + every nested org repo) |
 | After each development | Update `manual-test-guide.md` if verification steps changed |
 | After completing work | Append to `development-tracker.md` |
 
@@ -91,13 +92,16 @@ Also respect root `AGENTS.md` / `CLAUDE.md` and `.cursor/rules/`.
 
 ---
 
-## 4. Branch strategy (`repos/*`)
+## 4. Branch strategy (critical)
 
-- `main` — production-ready default branch
-- `stage` — staging
-- `dev` — active development (default working branch)
+Long-lived branches everywhere: **`main`** (prod) · **`stage`** (staging) · **`dev`** (active development).
 
-Feature work: branch from `dev`, merge back to `dev`, promote `dev` → `stage` → `main` via the team’s promotion process (not automated until infra is ready).
+| Rule | Detail |
+|---|---|
+| Daily default | Work, commit, and push **only on `dev`** — master workspace (`orbicrew_master`) and all five org repos under `repos/*` |
+| Do not | Push feature work directly to `main` or `stage` |
+| Exception | Only when the user **explicitly** asks to use `stage` / `main`, or to merge/promote |
+| Features | Branch from `dev`, merge back to `dev`, then promote `dev` → `stage` → `main` only on explicit request |
 
 ---
 
@@ -112,7 +116,7 @@ Feature work: branch from `dev`, merge back to `dev`, promote `dev` → `stage` 
 | Deploy Compose / shared ops | `repos/orbicrew-infra` |
 | Local shared deps Compose | `resources/orbicrew_dev_infra` (master-only) |
 
-**Admin decision:** dedicated `orbicrew-admin` from the start. Scaffold/auth shell early; full operator features stay phase-aligned with multi-tenancy. Tenant admin stays in Standard Dashboard settings (`orbicrew-web`).
+**Admin decision:** dedicated `orbicrew-admin` from the start (not `/admin` inside web). Scaffold/auth shell early; full operator features stay phase-aligned with multi-tenancy. Tenant admin stays in Standard Dashboard settings (`orbicrew-web`). **Auth/API:** `orbicrew-admin` calls privileged operator endpoints on `orbicrew-api` (e.g. `/v1/ops/*`); tenant JWTs must not access those routes.
 
 Scaffold only until Phase development starts — do not invent large feature code ahead of the phase plan.
 
@@ -145,7 +149,7 @@ Scaffold only until Phase development starts — do not invent large feature cod
 
 1. Check `development-tracker.md` for latest session notes / current focus.
 2. Open the active phase in `phase_by_phase_development_plan.md`.
-3. Confirm which `repos/<service>` you will touch.
+3. Confirm which `repos/<service>` you will touch; **`git checkout dev`** before committing.
 4. Start shared deps from `resources/orbicrew_dev_infra/` if needed; run apps natively.
-5. Implement → update manual test guide → update tracker.
+5. Implement → update manual test guide → update tracker → push **`dev`**.
 6. If building UI: consult `resources/stitch_orbicrew_ui_ux_guide/` and `resources/logos/`; copy assets into `orbicrew-web` or `orbicrew-admin` as needed.

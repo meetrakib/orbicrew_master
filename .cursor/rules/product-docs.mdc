@@ -11,3 +11,4 @@ alwaysApply: false
 - Orbit View is original IP — not an Agent Town fork (`tech/18_orbit_view_game_ui.md`)
 - Priorities: cost control → reliability → multi-tenant → English-first → user-extensible agents
 - Prefer updating docs for factual corrections; do not expand speculative scope past the phase plan
+- Tenant product UI = `orbicrew-web`; platform operator console = dedicated `orbicrew-admin` (privileged APIs on `orbicrew-api`); not `/admin` inside web

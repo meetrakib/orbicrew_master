@@ -163,7 +163,7 @@ The approval-gate UX in `10_ui_ux_guide.md` Section 14 already shows context (di
 The main requirements doc already requires human approval before any system-generated agent (from the meta-agent feature) is activated. This section adds runtime monitoring for agents that go rogue *after* activation, whether user-created or system-generated:
 
 - **Behavioral drift detection**: track each agent's actual tool-use and action patterns over time (this data already exists in `task_steps`); a significant deviation from an agent's established pattern is a signal worth surfacing, similar to the anomaly detection in Section 5, but applied continuously rather than per-task.
-- **Kill switch, per-agent and platform-wide**: you (or, for a managed customer, the tenant admin) can immediately disable a single agent without affecting others, and — as a platform-level safeguard — you can halt all autonomous execution platform-wide in the event of a systemic issue (e.g., a newly discovered injection technique affecting many tenants at once). This should be a fast, simple action, not a deploy-and-wait process.
+- **Kill switch, per-agent and platform-wide**: a tenant admin (in `orbicrew-web` settings) can immediately disable a single agent without affecting others, and — as a platform-level safeguard — Leangine operators (in dedicated `orbicrew-admin`, via privileged `orbicrew-api` ops endpoints) can halt all autonomous execution platform-wide in the event of a systemic issue (e.g., a newly discovered injection technique affecting many tenants at once). This should be a fast, simple action, not a deploy-and-wait process.
 
 ---
 

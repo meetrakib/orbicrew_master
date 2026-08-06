@@ -16,7 +16,7 @@ Part of the AI Employee Office Platform documentation set. See `00_INDEX.md` for
 
 ```mermaid
 flowchart TB
-    subgraph Public["Public REST API (v1)"]
+    subgraph Public["Public REST API (v1) — tenant product"]
         R1["/v1/agents"]
         R2["/v1/tasks"]
         R3["/v1/tenants"]
@@ -24,6 +24,11 @@ flowchart TB
         R5["/v1/approvals"]
         R6["/v1/memory"]
         R7["/v1/orbit/*"]
+    end
+    subgraph Ops["Operator API (v1) — privileged"]
+        O1["/v1/ops/tenants"]
+        O2["/v1/ops/usage/aggregate"]
+        O3["/v1/ops/kill-switch"]
     end
     subgraph Realtime["Realtime (WebSocket)"]
         W1["/v1/ws/tasks/:task_id"]
@@ -35,20 +40,25 @@ flowchart TB
         I3["request_approval"]
         I4["deliver_result"]
     end
-    Adapters["Channel Adapters<br/>(Orbit View / GUI / Telegram / Discord / WhatsApp)"] --> Internal
+    Web["orbicrew-web<br/>(tenant UI)"] --> Public
+    Admin["orbicrew-admin<br/>(operator console)"] --> Ops
+    Adapters["Channel Adapters<br/>(Telegram / Discord / WhatsApp)"] --> Internal
     Internal --> Public
     Internal --> Realtime
 ```
+
+Tenant UI (`orbicrew-web`) and messaging adapters use the public/tenant-scoped API. The dedicated platform operator app (`orbicrew-admin`) uses **privileged operator endpoints** on the same `orbicrew-api` service — not a second backend, and not routes inside the web app.
 
 ---
 
 ## 3. Authentication & tenant resolution
 
-- **Managed dashboard/API users:** standard session-based auth issuing a short-lived JWT, backed by a self-hosted open-source auth solution (see `08_devops_and_deployment.md` Section 9 for the recommended library) rather than a managed auth vendor, to avoid vendor lock-in; `tenant_id` embedded as a claim, never trusted from request body/query params.
+- **Managed dashboard/API users (orbicrew-web):** standard session-based auth issuing a short-lived JWT, backed by a self-hosted open-source auth solution (see `08_devops_and_deployment.md` Section 9 for the recommended library) rather than a managed auth vendor, to avoid vendor lock-in; `tenant_id` embedded as a claim, never trusted from request body/query params.
+- **Platform operators (orbicrew-admin):** separate operator identity and authz (Leangine staff only). Operator JWTs (or equivalent) carry an explicit operator role/claim and **must not** be interchangeable with tenant-user tokens. Operator calls hit `/v1/ops/*` (or equivalent privileged prefix) and are authorized independently of tenant RLS bypass rules.
 - **Third-party/API integrators (future):** API key per tenant, scoped, revocable, rate-limited independently of the dashboard session.
 - **Messaging channel adapters (Telegram/Discord/WhatsApp):** each incoming message is mapped to a `(tenant_id, user_id)` pair via a channel-identity linking table (e.g., a Telegram chat ID linked to a specific tenant user during onboarding) — the adapter authenticates itself to the backend with a service credential, then asserts the resolved user identity.
 
-Every request, regardless of entry path, resolves to a `tenant_id` before touching the database — this is what the RLS policies in `04_database_design.md` rely on.
+Every **tenant** request resolves to a `tenant_id` before touching the database — this is what the RLS policies in `04_database_design.md` rely on. Operator requests are explicitly privileged and audited; they do not impersonate a tenant JWT.
 
 ---
 
@@ -162,6 +172,20 @@ Purely additive endpoints for the spatial office UI (full feature spec in `18_or
 ```
 
 **Note on custom scripting (Section 8 of `18_orbit_view_game_ui.md`):** any custom decoration created through the sandboxed scripting layer is still placed through this same `POST /v1/orbit/objects` endpoint — `object_type` can reference a custom decoration definition, but the API surface itself is identical to placing a catalog item. The sandboxing/safety boundary is enforced client-side in the rendering sandbox, not by a separate API — this endpoint only ever stores placement metadata (position, rotation, a reference to what to render), never executable code.
+
+### 4.7 Platform operator endpoints (privileged)
+
+Consumed by **`orbicrew-admin` only**. Implemented in `orbicrew-api` with operator authz — never exposed as unauthenticated or tenant-JWT-reachable routes.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/v1/ops/tenants` | List / search tenants (lifecycle support) |
+| `GET` | `/v1/ops/tenants/:id` | Tenant detail for operators |
+| `GET` | `/v1/ops/usage/aggregate` | Cross-tenant cost / usage aggregate |
+| `POST` | `/v1/ops/kill-switch` | Platform-wide (or scoped) autonomous-execution halt |
+| `DELETE` | `/v1/ops/kill-switch` | Clear platform-wide halt when safe |
+
+Exact shapes land with Phase 2 operator work; the split above is the intended approach: one API, privileged prefix, dedicated admin client.
 
 ---
 

@@ -46,7 +46,7 @@ Nested repo contents under `repos/` are **not** committed to the master repo. On
 | Tenant settings (billing, seats, roles, per-agent kill switches) | `orbicrew-web` Standard Dashboard / settings | Phase 2 |
 | Platform operator console (cross-tenant cost, tenant lifecycle, platform-wide kill switch) | Dedicated `orbicrew-admin` app/repo | Scaffold early; full features Phase 2 |
 
-Platform operator console is a **separate** org repo from day one — not embedded `/admin` in `orbicrew-web`.
+Platform operator console is a **separate** org repo from day one — not embedded `/admin` in `orbicrew-web`. Operator UI calls privileged APIs on `orbicrew-api`.
 
 ## Local development infra
 
@@ -78,15 +78,15 @@ See [`resources/README.md`](resources/README.md). Agents building web/admin UI s
 | Development tracker | [`docs/development/development-tracker.md`](docs/development/development-tracker.md) | After completing work |
 | Product docs index | [`docs/leangine-office-docs/tech/00_INDEX.md`](docs/leangine-office-docs/tech/00_INDEX.md) | Requirements & architecture |
 
-## Branch strategy (org repos)
+## Branch strategy (all repos)
 
-Each project under `repos/` uses three long-lived branches:
+Same long-lived model for the **master workspace** and every org repo under `repos/`:
 
 - `main` — production-ready
 - `stage` — staging / pre-prod
-- `dev` — active development default
+- `dev` — **daily default** (work, commit, push here)
 
-Work feature branches off `dev` unless a change is explicitly stage/prod-only.
+**Agents:** checkout `dev`, commit on `dev`, push `origin dev`. Do **not** push feature work to `main` or `stage` unless the user explicitly asks to use those branches or to merge/promote. Feature branches cut from `dev` and merge back to `dev`.
 
 ## Repository URLs
 

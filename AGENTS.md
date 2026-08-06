@@ -49,11 +49,26 @@ Use logos/Stitch when building Standard Dashboard or platform admin UI. Copy nee
 ## Development workflow (mandatory)
 
 1. **Before development:** read `docs/development/phase_by_phase_development_plan.md` and work the current phase / task. Do not jump ahead of exit criteria without user approval.
-2. **During development:** implement in the correct `repos/<service>/` on branch `dev` (feature branches off `dev` as needed). Follow `main` / `stage` / `dev` strategy.
+2. **During development:** implement in the correct `repos/<service>/` on branch `dev` (feature branches off `dev` as needed). Commit and push to `dev` only unless the user explicitly asks to use `stage` / `main` or to merge/promote.
 3. **After each development slice:** update `docs/development/manual-test-guide.md` if new or changed manual verification steps exist.
 4. **After completing work:** append an entry to `docs/development/development-tracker.md`.
 
 Do **not** build product features in the workspace root — only docs, agent config, resources, and scaffolding.
+
+---
+
+## Branch workflow (critical — all agents)
+
+Day-to-day: **checkout `dev`, commit on `dev`, push `origin dev`.** Do not push feature work to `main` or `stage` unless the user explicitly says to use those branches or to merge/promote.
+
+| Repo class | Long-lived branches | Daily working / push target |
+|---|---|---|
+| Nested org repos under `repos/*` | `main` · `stage` · `dev` | **`dev` only** |
+| Master workspace `orbicrew_master` | `main` · `stage` · `dev` (same model) | **`dev` only** |
+
+- Feature branches: cut from `dev`, merge back to `dev`.
+- Promote `dev` → `stage` → `main` only when the user explicitly requests a merge/promote.
+- Never force-push `main` / `stage` (or `master`) unless the user explicitly requests it.
 
 ---
 
@@ -67,7 +82,7 @@ Do **not** build product features in the workspace root — only docs, agent con
 | `orbicrew-channels` | https://github.com/leangine/orbicrew-channels | `repos/orbicrew-channels` | TypeScript or Python (TBD) | Thin Telegram / Discord / WhatsApp adapters |
 | `orbicrew-infra` | https://github.com/leangine/orbicrew-infra | `repos/orbicrew-infra` | Docker Compose, scripts | Deploy topology, shared CI/ops templates |
 
-Platform operator console = dedicated `orbicrew-admin` (scaffold/auth shell early; full operator features phase-aligned with multi-tenancy). Tenant-facing settings stay in `orbicrew-web`.
+Platform operator console = dedicated `orbicrew-admin` (scaffold/auth shell early; full operator features phase-aligned with multi-tenancy). Tenant-facing settings stay in `orbicrew-web`. Auth: admin uses privileged operator APIs on `orbicrew-api` (`/v1/ops/*` or equivalent) — not tenant JWTs and not routes inside web.
 
 ### Nested repo isolation (critical)
 

@@ -37,6 +37,8 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 | W6 | `resources/` tracked | `resources/README.md`, Stitch guide, and `orbicrew_dev_infra` present; not gitignored |
 | W7 | Dev deps Compose | `resources/orbicrew_dev_infra/docker-compose.yml` defines Postgres+pgvector and Redis |
 | W8 | Dedicated admin scaffold | `repos/orbicrew-admin` exists with README; platform admin not documented as `/admin` in web |
+| W9 | Default branch is `dev` | Working checkout for master + each `repos/*` is `dev` for daily commits/pushes |
+| W10 | Master has `main`/`stage`/`dev` | `git branch -a` on master shows all three (local + origin after push) |
 
 ---
 

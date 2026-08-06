@@ -58,7 +58,7 @@ All linked paths below are relative to this file (`tech/`).
 |---|---|
 | Product vision & requirements | [01](../01_AI_Office_Platform_Requirements.md) |
 | Pricing / business model | [02](./02_cost_and_pricing.md) |
-| Architecture & stack | [03](./03_system_design.md) → [04](./04_database_design.md) → [05](./05_api_design.md) |
+| Architecture & stack | [03](./03_system_design.md) → [04](./04_database_design.md) → [05](./05_api_design.md) (tenant UI = `orbicrew-web`; operator console = dedicated `orbicrew-admin` → privileged `/v1/ops/*` on `orbicrew-api`) |
 | Build sequence | [07](./07_phased_development_plan.md) |
 | Deploy / ops | [08](./08_devops_and_deployment.md) |
 | Brand (locked Orbicrew) | [09](./09_brand_identity.md) §6 |

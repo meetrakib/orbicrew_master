@@ -25,17 +25,23 @@ Living engineering plan for this workspace. Derived from product docs under `doc
 
 ## Admin surfaces (decision)
 
-Product docs call for (a) tenant-side admin (roles, billing, per-agent kill switches) and (b) Leangine-side ops (aggregate cost monitoring, platform-wide kill switch). **Decision: no separate `orbicrew-admin` repo.**
+Product docs call for (a) tenant-side admin (roles, billing, per-agent kill switches) and (b) Leangine-side ops (aggregate cost monitoring, platform-wide kill switch). **Decision: dedicated `orbicrew-admin` repo from day one** (not embedded `/admin` in `orbicrew-web`).
 
 | Surface | Audience | Home | Phase |
 |---|---|---|---|
 | Tenant settings | Tenant owner/admin | `orbicrew-web` Standard Dashboard / settings (billing, seats, roles, agent kill switches) | Phase 2 |
-| Platform operator console | Leangine operators | Protected route group in `orbicrew-web` (e.g. `/admin`) — separate authz from tenant users | Phase 2 |
+| Platform operator console | Leangine operators | Dedicated `orbicrew-admin` app (separate authz / deploy from tenant users) | Scaffold/auth shell early; full features Phase 2 |
 | Operator APIs | Same | `orbicrew-api` privileged endpoints (RLS-aware, operator role) | Phase 2 |
 
-Revisit a fifth repo only if operator deploy cadence, auth IdP, or network isolation clearly diverges from the customer app. Until then, keep one web codebase with hard authz boundaries.
+UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_ui_ux_guide/` and `resources/logos/` (copy into web or admin as needed; never hard-link nested repos to master paths).
 
-UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_ui_ux_guide/` and `resources/logos/` (copy into web as needed; never hard-link nested repos to master paths).
+---
+
+## Local shared dependencies
+
+- **Deps Compose (master):** `resources/orbicrew_dev_infra/` — Postgres+pgvector, Redis. Use `docker compose up -d` anytime.
+- **Apps:** implement and run in `repos/*` **natively** during development (api, web, admin, channels). Do not run those app services in Docker day-to-day.
+- **`orbicrew-infra`:** staging/prod-oriented Compose and shared ops — not the day-to-day shared-deps path.
 
 ---
 
@@ -43,12 +49,11 @@ UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_
 
 | Phase | Primary repos |
 |---|---|
-| Setup | Master workspace + scaffold all `repos/*` |
-| 0 — Personal tool | `orbicrew-api`, `orbicrew-web`, `orbicrew-infra` |
-| 1 — Overnight + channels | + `orbicrew-channels` (Telegram/WhatsApp); deepen api/infra |
-| 2 — Multi-tenancy & pricing | `orbicrew-api`, `orbicrew-web` (tenant settings + platform `/admin`) |
+| Setup | Master workspace + scaffold all `repos/*` (including `orbicrew-admin`) |
+| 0 — Personal tool | `orbicrew-api`, `orbicrew-web`; shared deps via `resources/orbicrew_dev_infra`; optional admin auth shell |
+| 1 — Overnight + channels | + `orbicrew-channels` (Telegram/WhatsApp); deepen api |
+| 2 — Multi-tenancy & pricing | `orbicrew-api`, `orbicrew-web` (tenant settings), `orbicrew-admin` (operator console) |
 | 3 — Differentiation | `orbicrew-web` (Orbit View), channels (Discord), integrations |
-
 ---
 
 ## Phase -1 — Workspace & agentic setup *(current)*
@@ -60,9 +65,10 @@ UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_
 | Master git + ignores | Root git; ignore `local/`, `repos/*` contents, secrets; track `resources/` | Done — remote `https://github.com/meetrakib/orbicrew_master` |
 | Agent instructions | `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, bootstrap | Done (nested isolation + DRY principles) |
 | Process docs | This plan, tracker, manual test guide | Done |
-| Scaffold org repos | `orbicrew-web`, `orbicrew-api`, `orbicrew-channels`, `orbicrew-infra` with `main`/`stage`/`dev` | Done — remotes pushed to `leangine/*` |
+| Scaffold org repos | `orbicrew-web`, `orbicrew-api`, `orbicrew-channels`, `orbicrew-infra`, `orbicrew-admin` with `main`/`stage`/`dev` | Done — remotes pushed to `leangine/*` |
 | Nested README scrub | Org repos self-contained (no master-workspace references) | Done |
-| Admin planning | Platform `/admin` + tenant settings in `orbicrew-web`; no 5th repo | Done — documented |
+| Admin planning | Dedicated `orbicrew-admin`; tenant settings stay in `orbicrew-web` | Done — decision reversed from admin-inside-web |
+| Dev deps Compose | `resources/orbicrew_dev_infra` (Postgres+pgvector, Redis); apps run natively | Done |
 
 **Exit criteria:** a new agent can read `AGENT_BOOTSTRAP.md` and know where to work without a human re-briefing the product. **Met.** Org remotes connected and `main`/`stage`/`dev` pushed.
 
@@ -79,11 +85,11 @@ UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_
 - Model router + budget guard + LiteLLM (or equivalent local/dev path)
 - Basic Standard Dashboard (chat + task status) — **no Orbit View yet**
 - Optional: personal voice STT/TTS once chat path works
-- Local stack via `orbicrew-infra` Docker Compose
+- Shared deps via `resources/orbicrew_dev_infra` Compose; apps run natively
 
 | # | Task | Detail | Depends on | Repos |
 |---|---|---|---|---|
-| 0.1 | Local stack skeleton | Compose: Postgres+pgvector, Redis, api, web | — | infra, api, web |
+| 0.1 | Local deps + app skeletons | Postgres+pgvector + Redis via `resources/orbicrew_dev_infra`; api/web health locally | — | master deps, api, web |
 | 0.2 | Core schema | Tables from `tech/04_database_design.md` minus full billing surface | 0.1 | api |
 | 0.3 | LangGraph supervisor | Office Manager routes to hardcoded specialists | 0.2 | api |
 | 0.4 | Model router + budget guard | Classify → tier; hard per-task cap | 0.3 | api |
@@ -126,7 +132,7 @@ UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_
 | 2.3 | BYO key management | Encrypted keys; LiteLLM virtual/tenant routing | 2.1 | api, web |
 | 2.4 | Agent CRUD UI | User create/edit/delete agents (Memory/Skills/Soul/Setting) | 2.1 | web, api |
 | 2.5 | Tenant settings admin | Seats/roles, per-agent kill switches, plan limits in Dashboard settings | 2.1 | web, api |
-| 2.6 | Platform operator `/admin` | Protected operator console: cross-tenant cost, tenant lifecycle, platform-wide kill switch | 2.1 | web, api |
+| 2.6 | Platform operator console | Full `orbicrew-admin` features: cross-tenant cost, tenant lifecycle, platform-wide kill switch (build on early auth shell) | 2.1 | admin, api |
 | 2.7 | Project isolation | `project_id` scoping per hallucination/isolation docs | 2.1 | api, web |
 | 2.8 | Pilot | 3–5 real agencies/freelancers | all above | — |
 
@@ -164,9 +170,10 @@ Do **not** prioritize unless re-scoped:
 
 ## Suggested immediate next engineering slice (after this setup)
 
-1. ~~Connect org GitHub remotes for the four scaffolding repos and push `main`/`stage`/`dev`.~~ **Done.**
-2. Phase 0.1: Compose skeleton in `orbicrew-infra` + Hello-world API/web containers.
+1. ~~Connect org GitHub remotes for scaffolding repos and push `main`/`stage`/`dev`.~~ **Done** (including `orbicrew-admin`).
+2. Phase 0.1: confirm `resources/orbicrew_dev_infra` deps + Hello-world API/web run natively against them.
 3. Phase 0.2–0.4: schema + Office Manager + router/budget guard vertical slice.
 4. Phase 0.6: thinnest chat UI that submits a task and shows status.
+5. Early: `orbicrew-admin` auth shell (empty operator layout) when convenient; full ops UI remains Phase 2.6.
 
 Update the development tracker after each completed slice.

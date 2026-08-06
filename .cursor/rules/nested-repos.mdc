@@ -15,7 +15,8 @@ When editing **any file** under `repos/<name>/`:
 - Treat that repo as **independently consumable**. Someone may clone only the GitHub org repo with no master workspace present.
 - **Never** reference the master workspace, `orbicrew_master`, `orbicrew_development`, `docs/`, `docs/development/`, `AGENT_BOOTSTRAP`, `resources/`, `local/`, or sibling **local** paths (`../orbicrew-*`, `repos/...`).
 - Cross-links to sibling **GitHub** org repos by URL are OK (e.g. `https://github.com/leangine/orbicrew-api`).
-- Master-only context (phase plan, product docs, Stitch guides, logos under `resources/`) belongs **only** in the master repo — copy assets into the nested repo when the app needs them.
+- Master-only context (phase plan, product docs, Stitch guides, logos, local deps Compose under `resources/`) belongs **only** in the master repo — copy assets into the nested repo when the app needs them.
+- For local deps, say “run Postgres/Redis locally or via your own Compose” — do not point at master paths.
 
 ## Git & branches
 
@@ -27,4 +28,6 @@ When editing **any file** under `repos/<name>/`:
 ## Product boundaries
 
 - Keep channel adapters thin; put orchestration in `orbicrew-api`.
-- Platform operator UI lives in `orbicrew-web` (`/admin`), not a separate admin repo unless explicitly re-scoped.
+- Platform operator UI lives in `orbicrew-admin` (separate repo), not inside `orbicrew-web`.
+- Tenant settings / Standard Dashboard / Orbit View live in `orbicrew-web`.
+- Prefer running this app natively during development; do not assume app services run in Docker.

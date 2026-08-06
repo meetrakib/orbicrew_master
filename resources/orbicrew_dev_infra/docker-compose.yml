@@ -1,0 +1,41 @@
+# Shared local dependencies for Orbicrew app development.
+# Start only infra here; run api / web / admin / channels natively on the host.
+name: orbicrew-dev-infra
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: orbicrew-postgres
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-orbicrew}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-orbicrew}
+      POSTGRES_DB: ${POSTGRES_DB:-orbicrew}
+    volumes:
+      - orbicrew_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: orbicrew-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - orbicrew_redisdata:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  orbicrew_pgdata:
+  orbicrew_redisdata:

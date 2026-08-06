@@ -9,6 +9,7 @@ Tracked in the master repo: this `README.md` (and optional `.gitkeep`) only.
 | Repo | GitHub | Local path |
 |---|---|---|
 | `orbicrew-web` | https://github.com/leangine/orbicrew-web | `repos/orbicrew-web` |
+| `orbicrew-admin` | https://github.com/leangine/orbicrew-admin | `repos/orbicrew-admin` |
 | `orbicrew-api` | https://github.com/leangine/orbicrew-api | `repos/orbicrew-api` |
 | `orbicrew-channels` | https://github.com/leangine/orbicrew-channels | `repos/orbicrew-channels` |
 | `orbicrew-infra` | https://github.com/leangine/orbicrew-infra | `repos/orbicrew-infra` |
@@ -20,22 +21,28 @@ Master workspace (personal): https://github.com/meetrakib/orbicrew_master
 ```
 repos/
 ├── README.md              ← this file (tracked by master)
-├── orbicrew-web/          ← Next.js + React + TypeScript (dashboard, /admin, Orbit View)
+├── orbicrew-web/          ← Next.js + React + TypeScript (dashboard, tenant settings, Orbit View)
+├── orbicrew-admin/        ← Next.js platform operator console (separate app)
 ├── orbicrew-api/          ← Python FastAPI + LangGraph + workers
 ├── orbicrew-channels/     ← Telegram / Discord / WhatsApp thin adapters
-└── orbicrew-infra/        ← Docker Compose, deploy, shared ops
+└── orbicrew-infra/        ← Docker Compose (deploy topology), shared ops
 ```
 
-## Why these four (no fifth admin repo)
+## Why these repos
 
 | Repo | Why it exists |
 |---|---|
-| `orbicrew-web` | Interface layer: Standard Dashboard, tenant settings, platform operator `/admin`, Orbit View; separate deploy/scale from Python orchestration |
+| `orbicrew-web` | Customer interface: Standard Dashboard, tenant settings, Orbit View |
+| `orbicrew-admin` | Dedicated platform operator console — separate deploy/auth from tenant UI |
 | `orbicrew-api` | Orchestration core (Office Manager, router, budget guard, DB, billing); workers ship from same Python codebase initially |
 | `orbicrew-channels` | Multi-channel adapters must stay thin and independently releasable; proves “one backend, many faces” |
-| `orbicrew-infra` | Local Compose + staging/prod topology without coupling ops scripts to a single app repo |
+| `orbicrew-infra` | Staging/prod Compose + ops without coupling scripts to a single app repo |
 
-Platform admin is **not** a separate org repo. Tenant admin + operator console live in `orbicrew-web` (see phase plan). Split later only if justified.
+Tenant-facing settings stay in `orbicrew-web`. Platform operators use `orbicrew-admin`.
+
+## Local shared dependencies (master-only)
+
+During app development, start Postgres + Redis from master `resources/orbicrew_dev_infra/` (`docker compose up -d`). Run api / web / admin / channels **natively** on the Mac — do not put those apps in Docker while coding. Nested repos must not point at that master path; they describe Postgres/Redis as “local or your own Compose.”
 
 ## Nested repos must stand alone
 
@@ -52,6 +59,7 @@ Each `repos/<name>/` is independently consumable on GitHub. Files inside a neste
 ```bash
 cd repos
 git clone https://github.com/leangine/orbicrew-web.git
+git clone https://github.com/leangine/orbicrew-admin.git
 git clone https://github.com/leangine/orbicrew-api.git
 git clone https://github.com/leangine/orbicrew-channels.git
 git clone https://github.com/leangine/orbicrew-infra.git
@@ -61,5 +69,12 @@ If scaffolds already exist locally, remotes are:
 
 ```bash
 cd repos/orbicrew-web && git remote set-url origin https://github.com/leangine/orbicrew-web.git
-# repeat for api, channels, infra with matching URLs
+# repeat for admin, api, channels, infra with matching URLs
+```
+
+**If cloning a fresh machine and `orbicrew-admin` already exists on GitHub**, use the clone command above. Local scaffolds use:
+
+```bash
+cd repos/orbicrew-admin && git remote set-url origin https://github.com/leangine/orbicrew-admin.git
+# then push main/stage/dev if you created content locally first
 ```

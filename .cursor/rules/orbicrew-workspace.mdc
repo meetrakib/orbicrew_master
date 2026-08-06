@@ -12,17 +12,23 @@ Read `docs/development/AGENT_BOOTSTRAP.md` at session start for full onboarding.
 - `docs/leangine-office-docs/` — product & tech requirements (source of truth for *what*)
 - `docs/development/` — phase plan, manual tests, tracker (source of truth for *process*)
 - `repos/` — nested org git repos where product code lives
-- `resources/` — master-only brand/UI assets (`logos/`, `stitch_orbicrew_ui_ux_guide/`)
+- `resources/` — master-only assets (`logos/`, `stitch_orbicrew_ui_ux_guide/`, `orbicrew_dev_infra/`)
 - `local/` — private scratch — **never read unless the user explicitly asks**
 
 ## Ownership
 
 - Master workspace git = personal GitHub `https://github.com/meetrakib/orbicrew_master` (docs + agent config + `resources/`)
 - `repos/*` = Leangine org GitHub — commit code inside the nested repo, not into master
-  - web: `https://github.com/leangine/orbicrew-web` (includes tenant UI + platform `/admin`)
+  - web: `https://github.com/leangine/orbicrew-web` (tenant UI + Orbit View)
+  - admin: `https://github.com/leangine/orbicrew-admin` (platform operator console)
   - api: `https://github.com/leangine/orbicrew-api`
   - channels: `https://github.com/leangine/orbicrew-channels`
   - infra: `https://github.com/leangine/orbicrew-infra`
+
+## Local infra
+
+- Shared deps (Postgres+pgvector, Redis): `resources/orbicrew_dev_infra/` via `docker compose up -d`
+- Develop api / web / admin / channels **natively** — do not run app services in Docker during development
 
 ## Nested repo isolation
 

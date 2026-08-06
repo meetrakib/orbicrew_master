@@ -10,7 +10,7 @@ Keep this file lean. Deep process detail lives in `docs/development/`. Product d
 
 ## Product (one paragraph)
 
-**Orbicrew, by Leangine** is a multi-tenant AI employee office: an Office Manager agent receives tasks via Standard Dashboard, Orbit View (2D office), or messaging channels (Telegram/Discord/WhatsApp), routes work to specialist agents, enforces cost routing and budget caps, and supports overnight unattended execution with approval gates. Stack target: Next.js + React + TypeScript (web), Python + FastAPI + LangGraph (api), Postgres+pgvector, Redis, self-hosted LiteLLM.
+**Orbicrew, by Leangine** is a multi-tenant AI employee office: an Office Manager agent receives tasks via Standard Dashboard, Orbit View (2D office), or messaging channels (Telegram/Discord/WhatsApp), routes work to specialist agents, enforces cost routing and budget caps, and supports overnight unattended execution with approval gates. Stack target: Next.js + React + TypeScript (web + admin), Python + FastAPI + LangGraph (api), Postgres+pgvector, Redis, self-hosted LiteLLM.
 
 Canonical docs: `docs/leangine-office-docs/` — start at `tech/00_INDEX.md` and `01_AI_Office_Platform_Requirements.md`. Brand lock: Orbicrew, Deep Violet, Bricolage Grotesque + Hanken Grotesk (`tech/09_brand_identity.md` §6). Orbit View is **original IP**, not an Agent Town fork (`tech/18_orbit_view_game_ui.md`).
 
@@ -23,7 +23,7 @@ Canonical docs: `docs/leangine-office-docs/` — start at `tech/00_INDEX.md` and
 | `docs/leangine-office-docs/` | Product & tech requirements | Source of truth for what to build |
 | `docs/development/` | Phase plan, test guide, tracker, bootstrap | Process source of truth |
 | `repos/` | Nested org project git repos | Implement features here |
-| `resources/` | Logos + Stitch UI/UX guide | Master-only; use for branding/UI work |
+| `resources/` | Logos, Stitch UI/UX, local deps Compose | Master-only |
 | `local/` | Private scratch / personal materials | **Do not read unless the user explicitly asks** |
 
 **Git ownership:** master workspace = personal GitHub ([meetrakib/orbicrew_master](https://github.com/meetrakib/orbicrew_master)). Nested `repos/*` = Leangine org GitHub. Do not commit nested repo contents into the master repo.
@@ -34,8 +34,15 @@ Canonical docs: `docs/leangine-office-docs/` — start at `tech/00_INDEX.md` and
 |---|---|
 | `resources/logos/` | Brand logos (populate as assets arrive; folder tracked via `.gitkeep`) |
 | `resources/stitch_orbicrew_ui_ux_guide/` | Stitch exports: `orbicrew` (DESIGN), agent configuration/roster, approvals inbox, dashboard overview, hire AI employees, message agents, settings, task detail, usage/billing |
+| `resources/orbicrew_dev_infra/` | Docker Compose for shared deps (Postgres+pgvector, Redis) |
 
-Use these when building Standard Dashboard or platform `/admin` UI. Copy needed files into `orbicrew-web` — never make nested repos depend on `resources/` paths.
+Use logos/Stitch when building Standard Dashboard or platform admin UI. Copy needed files into `orbicrew-web` or `orbicrew-admin` — never make nested repos depend on `resources/` paths.
+
+### Local infra convention
+
+- Start shared dependencies anytime from `resources/orbicrew_dev_infra/` (`docker compose up -d`).
+- Develop and run apps in `repos/<github-repo>/` **natively on the Mac** (api, web, admin, channels) — do **not** run those app services in Docker during development.
+- `orbicrew-infra` owns staging/prod-oriented Compose and deploy topology, not day-to-day shared deps.
 
 ---
 
@@ -54,12 +61,13 @@ Do **not** build product features in the workspace root — only docs, agent con
 
 | Repo | GitHub | Path | Stack (intent) | Owns |
 |---|---|---|---|---|
-| `orbicrew-web` | https://github.com/leangine/orbicrew-web | `repos/orbicrew-web` | Next.js, React, TypeScript | Standard Dashboard, tenant settings, platform `/admin`, Orbit View |
+| `orbicrew-web` | https://github.com/leangine/orbicrew-web | `repos/orbicrew-web` | Next.js, React, TypeScript | Standard Dashboard, tenant settings, Orbit View |
+| `orbicrew-admin` | https://github.com/leangine/orbicrew-admin | `repos/orbicrew-admin` | Next.js, React, TypeScript | Platform operator console |
 | `orbicrew-api` | https://github.com/leangine/orbicrew-api | `repos/orbicrew-api` | Python, FastAPI, LangGraph | Orchestration, router, budget guard, DB, billing, workers |
 | `orbicrew-channels` | https://github.com/leangine/orbicrew-channels | `repos/orbicrew-channels` | TypeScript or Python (TBD) | Thin Telegram / Discord / WhatsApp adapters |
-| `orbicrew-infra` | https://github.com/leangine/orbicrew-infra | `repos/orbicrew-infra` | Docker Compose, scripts | Local stack, deploy topology, shared CI/ops templates |
+| `orbicrew-infra` | https://github.com/leangine/orbicrew-infra | `repos/orbicrew-infra` | Docker Compose, scripts | Deploy topology, shared CI/ops templates |
 
-**No separate `orbicrew-admin` repo** unless later re-scoped. Platform operator console = protected routes in `orbicrew-web` (Phase 2).
+Platform operator console = dedicated `orbicrew-admin` (scaffold/auth shell early; full operator features phase-aligned with multi-tenancy). Tenant-facing settings stay in `orbicrew-web`.
 
 ### Nested repo isolation (critical)
 

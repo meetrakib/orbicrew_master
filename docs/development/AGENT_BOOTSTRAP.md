@@ -15,7 +15,7 @@ This is the onboarding note for the Orbicrew development workspace (Cursor + Cla
 - Cost-first architecture: model router + budget guard + self-hosted LiteLLM
 - Overnight autonomy with approval gates and morning summaries
 - End state: multi-tenant SaaS (Managed + BYO-API)
-- Admin surfaces: tenant settings in the product UI; platform operator console as protected `/admin` in `orbicrew-web` (not a separate repo)
+- Admin surfaces: tenant settings in `orbicrew-web`; platform operator console in dedicated `orbicrew-admin`
 
 Product docs (source of truth):
 
@@ -33,9 +33,11 @@ orbicrew_development/          ← personal GitHub (master workspace)
 ├── .cursor/rules/
 ├── docs/development/          ← YOU ARE HERE (process)
 ├── docs/leangine-office-docs/ ← product requirements
-├── resources/                 ← logos + Stitch UI/UX (master-only)
+├── resources/                 ← logos, Stitch UI/UX, local deps Compose (master-only)
+│   └── orbicrew_dev_infra/    ← Postgres + Redis Compose
 ├── repos/                     ← org GitHub project clones
 │   ├── orbicrew-web/
+│   ├── orbicrew-admin/
 │   ├── orbicrew-api/
 │   ├── orbicrew-channels/
 │   └── orbicrew-infra/
@@ -53,6 +55,7 @@ orbicrew_development/          ← personal GitHub (master workspace)
 |---|---|---|
 | Master workspace | https://github.com/meetrakib/orbicrew_master | workspace root |
 | `orbicrew-web` | https://github.com/leangine/orbicrew-web | `repos/orbicrew-web` |
+| `orbicrew-admin` | https://github.com/leangine/orbicrew-admin | `repos/orbicrew-admin` |
 | `orbicrew-api` | https://github.com/leangine/orbicrew-api | `repos/orbicrew-api` |
 | `orbicrew-channels` | https://github.com/leangine/orbicrew-channels | `repos/orbicrew-channels` |
 | `orbicrew-infra` | https://github.com/leangine/orbicrew-infra | `repos/orbicrew-infra` |
@@ -63,8 +66,16 @@ orbicrew_development/          ← personal GitHub (master workspace)
 |---|---|
 | `resources/logos/` | Brand logos (folder may start empty; tracked) |
 | `resources/stitch_orbicrew_ui_ux_guide/` | Stitch screen exports for dashboard/admin UI |
+| `resources/orbicrew_dev_infra/` | Shared local deps: Postgres+pgvector, Redis |
 
 Stitch folders: `orbicrew` (DESIGN), `orbicrew_agent_configuration`, `orbicrew_agent_roster`, `orbicrew_approvals_inbox`, `orbicrew_dashboard_overview`, `orbicrew_hire_ai_employees`, `orbicrew_message_agents`, `orbicrew_settings`, `orbicrew_task_detail`, `orbicrew_usage_billing`.
+
+### Local infra convention
+
+1. `cd resources/orbicrew_dev_infra && docker compose up -d` — start shared dependencies anytime.
+2. Develop apps under `repos/<github-repo>/` and run them **natively on the Mac** (api, web, admin, channels).
+3. Do **not** run those app services in Docker during development — saves memory and disk.
+4. Nested repos must not reference this master path; they say “Postgres/Redis locally or your own Compose.”
 
 ---
 
@@ -94,12 +105,14 @@ Feature work: branch from `dev`, merge back to `dev`, promote `dev` → `stage` 
 
 | Work | Repo |
 |---|---|
-| Web UI, dashboard, tenant settings, platform `/admin`, Orbit View | `repos/orbicrew-web` |
+| Web UI, dashboard, tenant settings, Orbit View | `repos/orbicrew-web` |
+| Platform operator console | `repos/orbicrew-admin` |
 | FastAPI, LangGraph, router, DB, workers | `repos/orbicrew-api` |
 | Messaging adapters | `repos/orbicrew-channels` |
-| Compose, deploy, shared ops | `repos/orbicrew-infra` |
+| Deploy Compose / shared ops | `repos/orbicrew-infra` |
+| Local shared deps Compose | `resources/orbicrew_dev_infra` (master-only) |
 
-**Admin decision:** no fifth `orbicrew-admin` repo. Tenant admin lives in Standard Dashboard settings; platform operator console is a protected area of `orbicrew-web` (Phase 2). Split later only if operator deploy/auth needs diverge.
+**Admin decision:** dedicated `orbicrew-admin` from the start. Scaffold/auth shell early; full operator features stay phase-aligned with multi-tenancy. Tenant admin stays in Standard Dashboard settings (`orbicrew-web`).
 
 Scaffold only until Phase development starts — do not invent large feature code ahead of the phase plan.
 
@@ -133,5 +146,6 @@ Scaffold only until Phase development starts — do not invent large feature cod
 1. Check `development-tracker.md` for latest session notes / current focus.
 2. Open the active phase in `phase_by_phase_development_plan.md`.
 3. Confirm which `repos/<service>` you will touch.
-4. Implement → update manual test guide → update tracker.
-5. If building UI: consult `resources/stitch_orbicrew_ui_ux_guide/` and `resources/logos/`; copy assets into `orbicrew-web` as needed.
+4. Start shared deps from `resources/orbicrew_dev_infra/` if needed; run apps natively.
+5. Implement → update manual test guide → update tracker.
+6. If building UI: consult `resources/stitch_orbicrew_ui_ux_guide/` and `resources/logos/`; copy assets into `orbicrew-web` or `orbicrew-admin` as needed.

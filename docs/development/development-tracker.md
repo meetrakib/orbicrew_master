@@ -6,6 +6,53 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — Dedicated admin repo + local deps Compose
+
+**Agent / operator:** Cursor agent  
+**Phase:** Phase -1 (workspace & agentic setup)  
+**Scope:** Revert admin-inside-web decision; scaffold `orbicrew-admin`; add `resources/orbicrew_dev_infra` — **no product features**
+
+### Done
+
+- **Admin decision (updated):** dedicated `orbicrew-admin` from day one. Tenant settings stay in `orbicrew-web`; platform operator console is a separate app/repo (scaffold/auth shell early; full ops features Phase 2.6).
+- Scaffolded `repos/orbicrew-admin` (Next.js-friendly `.gitignore` + standalone README), branches `main`/`stage`/`dev`, initial commit `ce8c7ac`. Remote: `https://github.com/leangine/orbicrew-admin.git` (private) — all three branches pushed.
+- Added master `resources/orbicrew_dev_infra/` — lean Compose (Postgres `pgvector/pgvector:pg16` + Redis `redis:7-alpine`), `.env.example`, README. Convention: deps in Docker; apps native on Mac.
+- Reverted/updated all master docs/rules that said platform admin is `/admin` inside web.
+- Nested sibling READMEs: remove admin-from-web claims; link `orbicrew-admin` by GitHub URL where useful; tell clone-only users to run Postgres/Redis locally or via their own Compose (no master path).
+
+### Decisions / assumptions
+
+- Operator console is a fifth org repo (web, admin, api, channels, infra).
+- Day-to-day shared deps live in master `resources/orbicrew_dev_infra/`; `orbicrew-infra` remains deploy/ops oriented.
+- Apps (api/web/admin/channels) run natively during development — not in Docker.
+
+### Manual tests run
+
+- Nested admin README has no master/`docs/`/`resources/` references
+- Master accidental local `dev`/`stage` branches (created during failed sandbox git init) deleted — never pushed
+- `resources/orbicrew_dev_infra` files present and tracked in master
+
+### Blockers
+
+- None for scaffold push: empty private `leangine/orbicrew-admin` already existed; pushed `main`/`stage`/`dev` at `ce8c7ac` (default branch set to `main`).
+
+### Next recommended work
+
+1. Phase 0.1: bring up deps Compose + native api/web health endpoints.
+2. Drop logo files into `resources/logos/` when available.
+3. Early admin auth shell when convenient.
+
+### Files / repos touched
+
+- Master: docs, agent rules, README, `resources/orbicrew_dev_infra/**`, `repos/README.md`
+- Nested:
+  - `orbicrew-admin` `ce8c7ac` (new; pushed main/stage/dev)
+  - `orbicrew-web` `efdc601`
+  - `orbicrew-api` `8f39885`
+  - `orbicrew-infra` `c3056b1`
+
+---
+
 ## 2026-08-07 — Admin decision, nested-repo isolation, resources
 
 **Agent / operator:** Cursor agent  
@@ -14,7 +61,7 @@ Newest entries at the **top**.
 
 ### Done
 
-- **Admin decision:** no `orbicrew-admin` repo. Tenant settings + platform operator console live in `orbicrew-web` (protected `/admin` for operators). Scoped into Phase 2 (tasks 2.5–2.6).
+- **Admin decision:** no `orbicrew-admin` repo. Tenant settings + platform operator console live in `orbicrew-web` (protected `/admin` for operators). Scoped into Phase 2 (tasks 2.5–2.6). **Superseded** by later 2026-08-07 entry (dedicated admin repo).
 - Scrubbed all four nested READMEs to be standalone (GitHub sibling URLs only; no master/`docs/`/`AGENT_BOOTSTRAP` references).
 - Persisted agent rules: nested-repo isolation + best-practices/DRY in `AGENTS.md`, `CLAUDE.md`, `AGENT_BOOTSTRAP.md`, `.cursor/rules/orbicrew-workspace.mdc`, `.cursor/rules/nested-repos.mdc`.
 - Documented master-only `resources/logos/` (empty, `.gitkeep`) and `resources/stitch_orbicrew_ui_ux_guide/` (Stitch screens listed). Confirmed `.gitignore` does **not** ignore `resources/`.

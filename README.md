@@ -8,8 +8,9 @@ This repository is the **master workspace**: docs, agent instructions, shared `r
 
 1. **Clone this master repo** anywhere on your machine (personal GitHub).
 2. **Clone org project repos into `repos/`** (one folder per service — see `repos/README.md`).
-3. **Start agentic coding** in Cursor and/or Claude Code from this workspace root.
-4. Agents should read `docs/development/AGENT_BOOTSTRAP.md` first, then follow the phase plan and tracking docs.
+3. **Start shared deps** from `resources/orbicrew_dev_infra/` (`docker compose up -d` for Postgres + Redis).
+4. **Start agentic coding** in Cursor and/or Claude Code from this workspace root; run apps natively.
+5. Agents should read `docs/development/AGENT_BOOTSTRAP.md` first, then follow the phase plan and tracking docs.
 
 ```
 orbicrew_development/          ← this repo (personal GitHub)
@@ -18,9 +19,11 @@ orbicrew_development/          ← this repo (personal GitHub)
 ├── docs/
 │   ├── development/           ← phase plan, test guide, tracker, bootstrap
 │   └── leangine-office-docs/  ← product & technical requirements
-├── resources/                 ← logos + Stitch UI/UX guide (tracked)
+├── resources/                 ← logos, Stitch UI/UX, local deps Compose (tracked)
+│   └── orbicrew_dev_infra/    ← Postgres + Redis Compose (apps run natively)
 ├── repos/                     ← org GitHub clones (gitignored contents)
 │   ├── orbicrew-web/
+│   ├── orbicrew-admin/
 │   ├── orbicrew-api/
 │   ├── orbicrew-channels/
 │   └── orbicrew-infra/
@@ -41,9 +44,19 @@ Nested repo contents under `repos/` are **not** committed to the master repo. On
 | Surface | Where | Phase |
 |---|---|---|
 | Tenant settings (billing, seats, roles, per-agent kill switches) | `orbicrew-web` Standard Dashboard / settings | Phase 2 |
-| Platform operator console (cross-tenant cost, tenant lifecycle, platform-wide kill switch) | Protected `/admin` in `orbicrew-web` | Phase 2 |
+| Platform operator console (cross-tenant cost, tenant lifecycle, platform-wide kill switch) | Dedicated `orbicrew-admin` app/repo | Scaffold early; full features Phase 2 |
 
-**No separate `orbicrew-admin` GitHub repo** unless operator auth/deploy later diverges enough to justify a split.
+Platform operator console is a **separate** org repo from day one — not embedded `/admin` in `orbicrew-web`.
+
+## Local development infra
+
+| Need | Where |
+|---|---|
+| Postgres + pgvector, Redis (shared deps) | `resources/orbicrew_dev_infra/` — `docker compose up -d` |
+| Application coding (api, web, admin, channels) | `repos/<name>/` — run **natively** on the Mac |
+| Staging/prod-style multi-service Compose | `repos/orbicrew-infra` (later) |
+
+Do **not** run app services in Docker during day-to-day development.
 
 ## Resources (master-only)
 
@@ -51,8 +64,9 @@ Nested repo contents under `repos/` are **not** committed to the master repo. On
 |---|---|
 | [`resources/logos/`](resources/logos/) | Brand logos (may be empty until assets are added) |
 | [`resources/stitch_orbicrew_ui_ux_guide/`](resources/stitch_orbicrew_ui_ux_guide/) | Stitch UI/UX screen exports for dashboard work |
+| [`resources/orbicrew_dev_infra/`](resources/orbicrew_dev_infra/) | Lean Docker Compose for shared local dependencies |
 
-See [`resources/README.md`](resources/README.md). Agents building web/admin UI should use these; copy into `orbicrew-web` as needed. Nested org repos must not hard-depend on this folder.
+See [`resources/README.md`](resources/README.md). Agents building web/admin UI should use logos/Stitch; copy into the relevant app repo as needed. Nested org repos must not hard-depend on this folder.
 
 ## Docs map
 
@@ -80,6 +94,7 @@ Work feature branches off `dev` unless a change is explicitly stage/prod-only.
 |---|---|---|
 | Master workspace (personal) | https://github.com/meetrakib/orbicrew_master | workspace root |
 | `orbicrew-web` | https://github.com/leangine/orbicrew-web | `repos/orbicrew-web` |
+| `orbicrew-admin` | https://github.com/leangine/orbicrew-admin | `repos/orbicrew-admin` |
 | `orbicrew-api` | https://github.com/leangine/orbicrew-api | `repos/orbicrew-api` |
 | `orbicrew-channels` | https://github.com/leangine/orbicrew-channels | `repos/orbicrew-channels` |
 | `orbicrew-infra` | https://github.com/leangine/orbicrew-infra | `repos/orbicrew-infra` |
@@ -94,12 +109,17 @@ cd orbicrew_development
 # 2. Clone org repos into repos/
 cd repos
 git clone https://github.com/leangine/orbicrew-web.git
+git clone https://github.com/leangine/orbicrew-admin.git
 git clone https://github.com/leangine/orbicrew-api.git
 git clone https://github.com/leangine/orbicrew-channels.git
 git clone https://github.com/leangine/orbicrew-infra.git
 cd ..
 
-# 3. Open in Cursor / Claude Code and follow AGENT_BOOTSTRAP.md
+# 3. Start shared deps (Postgres + Redis only)
+cd resources/orbicrew_dev_infra && docker compose up -d && cd ../..
+
+# 4. Open in Cursor / Claude Code and follow AGENT_BOOTSTRAP.md
+#    Run api / web / admin / channels natively — not in Docker.
 ```
 
 Org repos are also cloneable **standalone** — their READMEs must not require this master workspace.

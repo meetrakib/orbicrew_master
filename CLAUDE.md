@@ -10,7 +10,7 @@ Imported shared instructions: `@AGENTS.md`
 
 ## What this workspace is
 
-Master **personal** git repo ([meetrakib/orbicrew_master](https://github.com/meetrakib/orbicrew_master)) for Orbicrew agentic development. Product code is in nested Leangine org repos under `repos/` (see URL table in `AGENTS.md` / `repos/README.md`). Product requirements are in `docs/leangine-office-docs/`. Process docs are in `docs/development/`. Brand/UI assets are in `resources/` (master-only).
+Master **personal** git repo ([meetrakib/orbicrew_master](https://github.com/meetrakib/orbicrew_master)) for Orbicrew agentic development. Product code is in nested Leangine org repos under `repos/` (see URL table in `AGENTS.md` / `repos/README.md`). Product requirements are in `docs/leangine-office-docs/`. Process docs are in `docs/development/`. Brand/UI assets and local deps Compose are in `resources/` (master-only).
 
 Do not implement application features at the workspace root.
 
@@ -27,6 +27,8 @@ Do not implement application features at the workspace root.
 7. No secrets in commits. No force-push to protected branches unless asked.
 8. **Nested repo isolation:** when editing under `repos/<name>/`, never reference master-only paths (`docs/`, `resources/`, `local/`, workspace layout, `orbicrew_master`). Nested repos must stay independently consumable. Sibling GitHub URLs are OK.
 9. **Coding principles:** follow best practices; prefer reusable shared abstractions (DRY / shared packages) over copy-paste.
+10. **Local infra:** shared deps via `resources/orbicrew_dev_infra/`; run apps natively (not in Docker) during development.
+11. **Platform admin:** dedicated `repos/orbicrew-admin` — not embedded `/admin` in web.
 
 ---
 
@@ -34,15 +36,17 @@ Do not implement application features at the workspace root.
 
 | Need | Go to |
 |---|---|
-| Dashboard / tenant settings / platform `/admin` / Orbit View | `repos/orbicrew-web` |
+| Dashboard / tenant settings / Orbit View | `repos/orbicrew-web` |
+| Platform operator console | `repos/orbicrew-admin` |
 | API, LangGraph, router, DB, workers | `repos/orbicrew-api` |
 | Telegram / Discord / WhatsApp adapters | `repos/orbicrew-channels` |
-| Docker Compose / deploy / shared ops | `repos/orbicrew-infra` |
+| Deploy topology / shared ops | `repos/orbicrew-infra` |
+| Local Postgres + Redis Compose | `resources/orbicrew_dev_infra` |
 | Requirements / architecture | `docs/leangine-office-docs/` |
 | Phase / tests / session log | `docs/development/` |
 | Logos / Stitch UI references | `resources/logos`, `resources/stitch_orbicrew_ui_ux_guide` |
 
-No separate `orbicrew-admin` repo — platform operator UI is a protected section of `orbicrew-web` (Phase 2).
+Platform operator UI is the dedicated `orbicrew-admin` repo (scaffold/auth shell early; full features with Phase 2). Tenant settings remain in `orbicrew-web`.
 
 Launch Claude Code from the nested service directory when doing deep work on that service to keep context focused. Root `CLAUDE.md` / `AGENTS.md` still apply for master-side work; do not bake master paths into nested-repo files.
 

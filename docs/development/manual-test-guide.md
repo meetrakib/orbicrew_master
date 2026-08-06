@@ -16,9 +16,10 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 
 | Prerequisite | Local how-to | Status |
 |---|---|---|
-| Docker Compose stack | `repos/orbicrew-infra` (TBD) | Not yet |
-| API reachable | TBD URL | Not yet |
-| Web reachable | TBD URL | Not yet |
+| Shared deps (Postgres, Redis) | `resources/orbicrew_dev_infra` — `docker compose up -d` | Available (scaffold) |
+| API reachable | Native process in `repos/orbicrew-api` (TBD URL) | Not yet |
+| Web reachable | Native process in `repos/orbicrew-web` (TBD URL) | Not yet |
+| Admin reachable | Native process in `repos/orbicrew-admin` (TBD URL) | Not yet |
 | Test tenant / user | TBD | Not yet |
 | Model keys / LiteLLM | `.env` (never commit) | Not yet |
 
@@ -33,7 +34,9 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 | W3 | Agent docs present | `AGENT_BOOTSTRAP.md`, phase plan, tracker, `AGENTS.md`, `CLAUDE.md` exist |
 | W4 | Nested repos have `main`, `stage`, `dev` | `git branch` in each `repos/*` shows all three |
 | W5 | Nested READMEs stand alone | No references to `orbicrew_master`, `docs/development`, or `AGENT_BOOTSTRAP` inside `repos/orbicrew-*/` |
-| W6 | `resources/` tracked | `resources/README.md` and Stitch guide present; not gitignored |
+| W6 | `resources/` tracked | `resources/README.md`, Stitch guide, and `orbicrew_dev_infra` present; not gitignored |
+| W7 | Dev deps Compose | `resources/orbicrew_dev_infra/docker-compose.yml` defines Postgres+pgvector and Redis |
+| W8 | Dedicated admin scaffold | `repos/orbicrew-admin` exists with README; platform admin not documented as `/admin` in web |
 
 ---
 
@@ -43,9 +46,9 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 
 | # | Check | Expected | Status |
 |---|---|---|---|
-| 0.A.1 | Compose up | Postgres, Redis, api, web healthy | Pending |
-| 0.A.2 | API health | Health endpoint returns OK | Pending |
-| 0.A.3 | Web loads | Dashboard shell loads without console errors | Pending |
+| 0.A.1 | Deps compose up | Postgres + Redis healthy via `resources/orbicrew_dev_infra` | Pending |
+| 0.A.2 | API health | Native API health endpoint returns OK | Pending |
+| 0.A.3 | Web loads | Native dashboard shell loads without console errors | Pending |
 
 ### 0.B Task path (core)
 

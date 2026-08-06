@@ -8,6 +8,7 @@ Tracked in the **master** workspace only. Nested org repos must not assume this 
 |---|---|
 | `resources/logos/` | Brand logos for Orbicrew / Leangine (add files here as they become available) |
 | `resources/stitch_orbicrew_ui_ux_guide/` | Stitch UI/UX exports for Standard Dashboard screens |
+| `resources/orbicrew_dev_infra/` | Lean Docker Compose for shared local dependencies (Postgres+pgvector, Redis) |
 
 ### Stitch guide screens
 
@@ -24,6 +25,10 @@ Tracked in the **master** workspace only. Nested org repos must not assume this 
 
 Each screen folder typically includes `code.html` and `screen.png` (except the design folder).
 
+### Dev infra Compose
+
+See [`orbicrew_dev_infra/README.md`](orbicrew_dev_infra/README.md). Start shared deps with `docker compose up -d`. Run application services from `repos/*` natively — not in this Compose file.
+
 ## Agent usage
 
-When building web or platform-admin UI in `orbicrew-web`, use these assets for branding and layout reference. Copy needed logos/assets into the web repo as appropriate; do not hard-code absolute machine paths or references from nested repos back to this folder.
+When building tenant UI in `orbicrew-web` or platform-operator UI in `orbicrew-admin`, use logos/Stitch for branding and layout reference. Copy needed assets into the app repo as appropriate; do not hard-code absolute machine paths or references from nested repos back to this folder.

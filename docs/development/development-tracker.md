@@ -6,6 +6,42 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — Phase 0.4: Model Router + Budget Guard
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 0 (Personal tool) — task 0.4
+**Scope:** `orbicrew-api` only — tier classification, per-task budget enforcement, real cost persistence. No real model calls yet (specialists are still the Phase 0.3 canned stub).
+
+### Done
+- `src/orbicrew_api/model_router.py`: `classify_tier(specialist, input_text)` heuristic (hard-keyword match → `frontier`; short general text → `trivial`; long text → `mid`; else `cheap`) + a static `TIER_MODELS` table mapping each tier to a placeholder model name and flat per-task cost estimate. `route()` returns a `RouteDecision(tier, model, estimated_cost_usd)`.
+- `src/orbicrew_api/budget_guard.py`: `check_budget(estimated_cost_usd, spend_so_far_usd, budget_cap_usd) -> BudgetDecision` — pure function, hard per-task ceiling only (no retry-then-escalate or per-tenant aggregate caps yet — those are Phase 1 budget hardening).
+- `office_manager.py` graph gains two nodes between `classify` and the specialist nodes: `route` (calls the Model Router, stamps `tier`/`model`/`estimated_cost_usd` into state) and a conditional edge that sends the task to `budget_paused` instead of the specialist when `check_budget` denies it. `budget_paused` is a terminal node with a `[Budget Guard] Task paused: ...` output and a `budget_pause` step.
+- `tasks.py`: `SubmitTaskRequest` gained an optional `budget_cap_usd` override (defaults to the `tasks.budget_cap_usd` column default, `$1.00`); `task_steps.model_used`/`cost_usd` are now populated from the graph's step details instead of always being null/0; a `usage_records` row is inserted after a successful (non-paused) run; `tasks.status` can now be `paused`, and `spend_so_far_usd` reflects the real estimate (0 when paused). `TaskResponse` gained `tier`/`model` fields.
+- Tests: `tests/test_model_router.py`, `tests/test_budget_guard.py` (new); `tests/test_office_manager.py` and `tests/test_tasks.py` updated for the new `route` step and a budget-paused path. 23 passed (was 13).
+- Manual verification against live Postgres/Redis: cheap-tier task → `done`, `$0.01` in `usage_records`; frontier-tier task (hard-keyword phrasing) with default $1 cap → `done`, `$0.25` in `usage_records`; same phrasing with `budget_cap_usd: 0.01` → `status: "paused"`, `spend_so_far_usd: 0`, **no** `usage_records` row written. Confirmed via `psql` on `tasks` and `usage_records`.
+
+### Decisions / assumptions
+- Tier→model→cost is a static lookup table, not a real cheap-classifier-model call or per-token LiteLLM costing — that's explicitly deferred until specialists make real model calls (Phase 0.5+); this slice's job was the classify→tier→budget-gate→record pipeline, not real routing intelligence.
+- `spend_so_far_usd` always starts at `0` for a submitted task — this endpoint still runs the whole graph synchronously in one request (Phase 0.3 decision, unchanged). Accumulating spend across queued/retried steps is Phase 1.1 (task queue) + 1.2 (budget hardening) territory.
+- A paused task writes no `usage_records` row and leaves `spend_so_far_usd` at 0 — budget denial happens before "execution," so nothing was actually spent.
+- Added `paused` as a new `tasks.status` value (alongside the existing `running`/`done`/`failed`) — no schema change needed since `status` was already free-text with no CHECK constraint.
+
+### Manual tests run
+- `uv run pytest` — 23 passed
+- Live API: 3 `POST /v1/tasks` cases (cheap/default-budget, frontier/default-budget, frontier/tiny-budget) — see Done section
+- `psql -c 'select task_id, model_used, cost_usd from usage_records'` — exactly the 2 non-paused runs present
+- `psql -c 'select id, status, spend_so_far_usd, budget_cap_usd from tasks'` — paused row shows `spend_so_far_usd = 0`, others match their tier's cost
+
+### Next recommended work
+1. Phase 0.5: 2–3 real specialists (pick from actual need — writing/research/coding are the current stub categories) replacing the canned stub output; this is also where `estimated_cost_usd` should start being reconciled against real token usage instead of the flat per-tier estimate.
+2. Phase 0.6: thinnest chat UI that submits a task and shows status/tier/model.
+
+### Files / repos touched
+- `repos/orbicrew-api`: `src/orbicrew_api/model_router.py`, `src/orbicrew_api/budget_guard.py`, `src/orbicrew_api/office_manager.py`, `src/orbicrew_api/tasks.py`, `tests/test_model_router.py`, `tests/test_budget_guard.py`, `tests/test_office_manager.py`, `tests/test_tasks.py`, `README.md`
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md` (this entry)
+
+---
+
 ## 2026-08-07 — Phase 0.1: local deps + api/web health skeletons
 
 **Agent / operator:** Cursor agent  
@@ -335,6 +371,43 @@ Newest entries at the **top**.
 
 ### Files / repos touched
 - `repos/orbicrew-api`: `migrations/0001_core_schema.sql`, `src/orbicrew_api/migrate.py`, `tests/test_migrate.py`, `pyproject.toml`, `README.md`
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md` (this entry)
+
+---
+
+## 2026-08-07 — Phase 0.3: LangGraph Office Manager supervisor
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 0 (Personal tool) — task 0.3
+**Scope:** `orbicrew-api` only — supervisor routing + task persistence, no real model calls yet.
+
+### Done
+- Added `langgraph` (1.2.10) as a dependency.
+- `src/orbicrew_api/bootstrap.py`: deterministic (uuid5-derived) dev tenant + user, upserted idempotently on app startup (`lifespan` in `main.py`). Phase 0 is single-user, so this stands in for real signup until Phase 2.
+- `src/orbicrew_api/office_manager.py`: compiled `langgraph.graph.StateGraph` — a `classify` node picks one of `coding` / `writing` / `research` / `general` by keyword match, conditional-edges into the matching specialist node, which returns a canned `"[<Specialist Name>] noted: <input>"` string. Both node types append a structured step record (`step_type`, `detail`) to state for the audit trail.
+- `src/orbicrew_api/tasks.py`: `POST /v1/tasks` (insert task as `running` → run the graph → insert one `task_steps` row per recorded step → update task to `done`/`failed` with `metadata = {specialist, output}`) and `GET /v1/tasks/:id` (task + ordered step trace, 404 if missing/wrong tenant). Runs synchronously in-request — no queue yet (that's Phase 1.1).
+- Wired `tasks_router` and the bootstrap call into `main.py`.
+- Tests: `tests/test_office_manager.py` (classification table + one full `ainvoke` through the compiled graph, no DB) and `tests/test_tasks.py` (API tests with a mocked `pg_pool`, mirroring the existing `test_health.py` style — submit/coding-routing, get/found, get/404).
+- Manually verified against the live local Postgres: started the API, `POST /v1/tasks` for coding/writing/general phrasing all routed correctly, `GET /v1/tasks/:id` returned the persisted result, confirmed via `psql` that `tenants`/`users`/`tasks`/`task_steps` rows landed correctly.
+
+### Decisions / assumptions
+- Routing is deliberately keyword-based, not model-based — this task is explicitly "hardcoded specialists"; the real classifier is the Model Router (0.4). Left an explicit code comment marking it as a placeholder so it isn't mistaken for the real router later.
+- Specialist "execution" is a canned string, not a real model call — real specialist behavior is task 0.5. `task_steps.model_used` is left null and `cost_usd` is `0` throughout; `tool_call` (the only structured jsonb column on that table) is reused to hold the routing/step detail since no better-fitting column exists yet.
+- No task queue — task 0.3 runs the whole graph synchronously inside the HTTP handler. Queued/checkpointed execution is explicitly Phase 1.1; introducing it now would be scope creep against the phase plan.
+- `agent_id` on `tasks` is left `null` — hardcoded specialists are Python-level constants, not `agents` table rows yet. Real agent CRUD (and therefore real `agent_id` values) is Phase 0.5 / 2.4.
+- Bootstrap uses fixed uuid5-derived IDs (not a runtime-generated random tenant) so the same dev tenant/user exist across restarts without needing a lookup query on every request.
+
+### Manual tests run
+- `uv run pytest` — 13 passed (5 health + 3 migration + 5 new office-manager/tasks)
+- Live API against `resources/orbicrew_dev_infra` Postgres: `POST /v1/tasks` for coding/writing/general inputs → correct `specialist` + `output` each time; `GET /v1/tasks/:id` → matches; `GET /v1/tasks/<random-uuid>` → 404
+- `psql -c '\dt'` style checks: `tenants`/`users` has exactly the one seeded "Founder Workspace" row; `task_steps` has 2 ordered rows (`classify`, `specialist_execute`) per submitted task
+
+### Next recommended work
+1. Phase 0.4: Model Router + Budget Guard — replace the keyword classifier with a cheap-model classification step, add per-task budget cap enforcement before/around model calls.
+2. Phase 0.5: real specialists (2–3, picked from actual need) replacing the canned stub output; likely also when `agents` table rows start getting created/seeded for real.
+
+### Files / repos touched
+- `repos/orbicrew-api`: `src/orbicrew_api/bootstrap.py`, `src/orbicrew_api/office_manager.py`, `src/orbicrew_api/tasks.py`, `src/orbicrew_api/main.py`, `tests/test_office_manager.py`, `tests/test_tasks.py`, `pyproject.toml`, `README.md`
 - `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md` (this entry)
 
 ---

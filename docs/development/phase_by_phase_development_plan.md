@@ -91,8 +91,8 @@ UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_
 |---|---|---|---|---|---|
 | 0.1 | Local deps + app skeletons | Postgres+pgvector + Redis via `resources/orbicrew_dev_infra`; api/web health locally | — | master deps, api, web | **Done** — Compose healthy; FastAPI `/health`+`/ready`; Next.js status shell |
 | 0.2 | Core schema | Tables from `tech/04_database_design.md` minus full billing surface | 0.1 | api | **Done** — SQL migrations in `repos/orbicrew-api/migrations/`, applied to local Postgres; RLS deferred to Phase 2 |
-| 0.3 | LangGraph supervisor | Office Manager routes to hardcoded specialists | 0.2 | api | Pending |
-| 0.4 | Model router + budget guard | Classify → tier; hard per-task cap | 0.3 | api | Pending |
+| 0.3 | LangGraph supervisor | Office Manager routes to hardcoded specialists | 0.2 | api | **Done** — `office_manager.py` graph + `POST/GET /v1/tasks`, seeded dev tenant/user in `bootstrap.py` |
+| 0.4 | Model router + budget guard | Classify → tier; hard per-task cap | 0.3 | api | **Done** — `model_router.py` (tier + model + cost estimate) + `budget_guard.py` (hard per-task cap) wired as graph nodes in `office_manager.py`; over-cap tasks return `status: paused`, no spend recorded |
 | 0.5 | 2–3 specialists | Pick from real need (e.g. writing, research, coding) | 0.4 | api | Pending |
 | 0.6 | Standard chat GUI | Text I/O + task status | 0.4 | web | Pending |
 | 0.7 | OpenAPI + TS client | Typed contract web ↔ api | 0.3–0.6 | api, web | Pending |
@@ -172,8 +172,9 @@ Do **not** prioritize unless re-scoped:
 
 1. ~~Connect org GitHub remotes for scaffolding repos and push `main`/`stage`/`dev`.~~ **Done** (including `orbicrew-admin`).
 2. ~~Phase 0.1: deps Compose + native api/web health.~~ **Done**.
-3. Phase 0.2–0.4: schema + Office Manager + router/budget guard vertical slice.
-4. Phase 0.6: thinnest chat UI that submits a task and shows status.
-5. Early: `orbicrew-admin` auth shell (empty operator layout) when convenient; full ops UI remains Phase 2.6.
+3. ~~Phase 0.2–0.4: schema + Office Manager + router/budget guard vertical slice.~~ **Done**.
+4. Phase 0.5: 2–3 real specialists, replacing the canned stub output.
+5. Phase 0.6: thinnest chat UI that submits a task and shows status.
+6. Early: `orbicrew-admin` auth shell (empty operator layout) when convenient; full ops UI remains Phase 2.6.
 
 Update the development tracker after each completed slice.

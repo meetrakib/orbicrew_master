@@ -65,7 +65,7 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 
 | # | Check | Expected | Status |
 |---|---|---|---|
-| 0.B.1 | Submit text task via web | Task appears queued → running → done/failed | Pending (web GUI not built yet — API path passes, see 0.B.2) |
+| 0.B.1 | Submit text task via web | Task appears queued → running → done/failed | Pass (2026-08-07) — `http://localhost:3000` "Ask the Office Manager" form submits via a server action to `POST /v1/tasks` and renders status/specialist/tier/model/spend/output; verified with Playwright (real haiku prompt → `writing`/`cheap`/`claude-haiku-4-5` real output) |
 | 0.B.2 | Office Manager routes | Specialist appropriate to task is selected | Pass (2026-08-07, via API) — `POST /v1/tasks` with coding/writing/research/general phrasing returns the matching `specialist` |
 | 0.B.3 | Budget guard | Task over cap pauses / fails safely (no runaway spend) | Pass (2026-08-07) — `POST /v1/tasks` with `budget_cap_usd: 0.01` against a frontier-tier phrasing returns `status: "paused"`, `spend_so_far_usd: 0`, and no `usage_records` row is written |
 | 0.B.4 | Router prefers cheap tier | Simple task does not hit frontier model (verify in usage logs) | Pass (2026-08-07) — short/simple phrasing routes to `cheap`/`trivial` tier (`claude-haiku` / free tier); only hard-keyword phrasing (e.g. "debug production architecture") escalates to `frontier` (`claude-opus`); confirmed via `usage_records` rows |
@@ -138,5 +138,6 @@ Add dated notes when a manual bug is found in the wild:
 
 | Date | Change |
 |---|---|
+| 2026-08-07 | 0.B.1 marked Pass — Standard chat GUI (Phase 0.6) verified live via Playwright |
 | 2026-08-07 | 0.B.3/0.B.4 marked Pass — Model Router + Budget Guard (Phase 0.4) verified live |
 | 2026-08-07 | Initial structure created during workspace agentic setup |

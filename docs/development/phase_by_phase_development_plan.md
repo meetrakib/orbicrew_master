@@ -94,7 +94,7 @@ UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_
 | 0.3 | LangGraph supervisor | Office Manager routes to hardcoded specialists | 0.2 | api | **Done** — `office_manager.py` graph + `POST/GET /v1/tasks`, seeded dev tenant/user in `bootstrap.py` |
 | 0.4 | Model router + budget guard | Classify → tier; hard per-task cap | 0.3 | api | **Done** — `model_router.py` (tier + model + cost estimate) + `budget_guard.py` (hard per-task cap) wired as graph nodes in `office_manager.py`; over-cap tasks return `status: paused`, no spend recorded |
 | 0.5 | 2–3 specialists | Pick from real need (e.g. writing, research, coding) | 0.4 | api | **Done** — `llm_client.py`; coding/writing/research/general specialist nodes call the real Anthropic API at the router-selected model; actual cost from real token usage persisted to `usage_records`/`tasks.spend_so_far_usd` |
-| 0.6 | Standard chat GUI | Text I/O + task status | 0.4 | web | Pending |
+| 0.6 | Standard chat GUI | Text I/O + task status | 0.4 | web | **Done** — `ChatForm` client component + `submitTaskAction` server action in `orbicrew-web`; posts to `POST /v1/tasks` server-side (no browser CORS) and renders status/specialist/tier/model/spend/output |
 | 0.7 | OpenAPI + TS client | Typed contract web ↔ api | 0.3–0.6 | api, web | Pending |
 | 0.8 | Voice (optional early) | Whisper STT + TTS for founder languages | 0.6 | api, web | Pending |
 | 0.9 | Daily-use soak | 2–3 weeks real work before Phase 1 | all above | — | Pending |
@@ -174,7 +174,8 @@ Do **not** prioritize unless re-scoped:
 2. ~~Phase 0.1: deps Compose + native api/web health.~~ **Done**.
 3. ~~Phase 0.2–0.4: schema + Office Manager + router/budget guard vertical slice.~~ **Done**.
 4. ~~Phase 0.5: 2–3 real specialists, replacing the canned stub output.~~ **Done**.
-5. Phase 0.6: thinnest chat UI that submits a task and shows status.
-6. Early: `orbicrew-admin` auth shell (empty operator layout) when convenient; full ops UI remains Phase 2.6.
+5. ~~Phase 0.6: thinnest chat UI that submits a task and shows status.~~ **Done**.
+6. Phase 0.7: OpenAPI + generated TS client (replace the hand-written `Task`/`SubmitTaskRequest` types in `orbicrew-web`).
+7. Early: `orbicrew-admin` auth shell (empty operator layout) when convenient; full ops UI remains Phase 2.6.
 
 Update the development tracker after each completed slice.

@@ -6,6 +6,41 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — Phase 0.6: standard chat GUI
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 0 (Personal tool) — task 0.6
+**Scope:** `orbicrew-web` only — thinnest chat UI that submits a task to `orbicrew-api` and shows status/tier/model/output. No OpenAPI/typed client yet (0.7), no polling/streaming (backend still runs each task synchronously in one request).
+
+### Done
+- `src/lib/api-tasks.ts` (new): `Task`/`TaskStep` types mirroring `orbicrew-api`'s `TaskResponse`/`TaskStepResponse`, and `submitTask(inputText)` — server-side `fetch` (`ORBICREW_API_URL`) to `POST /v1/tasks`, same no-browser-CORS convention as the existing `fetchApiStatus`. Extracted `apiBaseUrl()` out of `api-status.ts` so both modules share it (was previously private to that file).
+- `src/app/actions.ts` (new): `submitTaskAction(prevState, formData)` Server Action — trims/validates `input_text`, calls `submitTask`, returns `{ task, error }`.
+- `src/app/chat-form.tsx` (new): `"use client"` component — `useActionState` + `useFormStatus` around a `<textarea>` + submit button (React Server Actions form pattern, per `node_modules/next/dist/docs/01-app/02-guides/forms.md` since this Next.js 16.3 pin is ahead of training data per the repo's `AGENTS.md` warning). Renders task id/status, specialist/tier/model/spend as a `<dl>` grid, and the raw output text.
+- Wired `<ChatForm />` into `src/app/page.tsx` below the existing API-status section (replacing the old "arrives in the next slice" placeholder paragraph).
+- `npx tsc --noEmit` and `npm run lint` both clean.
+
+### Decisions / assumptions
+- **Server Actions, not a client-side `fetch` + browser CORS** — consistent with the Phase 0.1 decision that browser code never talks to `ORBICREW_API_URL` directly; keeps `orbicrew-api` CORS config unchanged.
+- **No polling** — `POST /v1/tasks` already runs the whole LangGraph synchronously and returns the final `TaskResponse` in one round trip (Phase 0.3/1.1 decision), so the Server Action's response *is* the finished task; a queue-backed async flow (Phase 1.1) is the natural point to add polling or SSE.
+- Hand-wrote the `Task`/`SubmitTaskRequest`-shaped types in `api-tasks.ts` instead of generating them — Phase 0.7 ("OpenAPI + TS client") is explicitly the next plan item for replacing this with a generated contract; added it to the plan's "suggested immediate next slice" list since it wasn't there before.
+- Found and fixed a bug during manual verification: initially exported a plain object (`initialSubmitTaskState`) from the `"use server"` file `actions.ts`, which Next.js rejects ("a use server file can only export async functions") — moved that constant into `chat-form.tsx` instead, since only functions (and Server Action-safe types) may live in a Server Actions module.
+
+### Manual tests run
+- `npx tsc --noEmit` — clean; `npm run lint` — clean
+- Playwright (headless Chromium, installed for this check) against the running dev server + live API/Postgres/Redis: submitted "Write a two-line haiku about clouds" → real non-canned output, `specialist: writing`, `tier: cheap`, `model: claude-haiku-4-5`, real `spend_so_far_usd` (screenshot captured, matches expected UI)
+- Empty/whitespace-only submission (bypassing the HTML `required` attribute to reach the server-side check) → `"Enter a task before submitting."` error rendered, no API call made
+
+### Next recommended work
+1. Phase 0.7: OpenAPI schema from `orbicrew-api` + generated TS client for `orbicrew-web`, replacing the hand-written types in `api-tasks.ts`.
+2. Phase 0.8: voice (optional) once the text chat path is in daily use.
+3. When Phase 1.1 (task queue) lands, revisit this chat form — synchronous single-request submission won't hold once tasks are queued/checkpointed.
+
+### Files / repos touched
+- `repos/orbicrew-web`: `src/lib/api-status.ts`, `src/lib/api-tasks.ts` (new), `src/app/actions.ts` (new), `src/app/chat-form.tsx` (new), `src/app/page.tsx`
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md` (this entry)
+
+---
+
 ## 2026-08-07 — Phase 0.5: real specialists (Anthropic API)
 
 **Agent / operator:** Claude Code

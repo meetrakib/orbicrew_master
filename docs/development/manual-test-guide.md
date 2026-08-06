@@ -53,6 +53,14 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 | 0.A.3 | API readiness | `curl http://localhost:8000/ready` → `status: ready`, postgres+redis `ok` (HTTP 200) | Pass (2026-08-07) |
 | 0.A.4 | Web status shell | `http://localhost:3000` shows Orbicrew status with API **healthy** and postgres/redis ok | Pass (2026-08-07) |
 
+### 0.A.5 Core schema migration
+
+| # | Check | Expected | Status |
+|---|---|---|---|
+| 0.A.5.1 | Apply migrations | `cd repos/orbicrew-api && uv run orbicrew-api-migrate` → applies `0001_core_schema.sql` | Pass (2026-08-07) |
+| 0.A.5.2 | Idempotent re-run | Running again prints "No pending migrations." | Pass (2026-08-07) |
+| 0.A.5.3 | Tables present | `docker exec orbicrew-postgres psql -U orbicrew -d orbicrew -c '\dt'` shows all 13 core tables + `schema_migrations` | Pass (2026-08-07) |
+
 ### 0.B Task path (core)
 
 | # | Check | Expected | Status |

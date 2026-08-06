@@ -300,6 +300,45 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — Phase 0.2: core schema migration
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 0 (Personal tool) — task 0.2
+**Scope:** `orbicrew-api` only — core Postgres schema, no billing/BYO-key or Orbit View tables, no application logic yet.
+
+### Done
+- Added a plain-SQL migration runner (`src/orbicrew_api/migrate.py`, no ORM/framework — matches the existing raw-asyncpg style): tracks applied versions in a `schema_migrations` table, applies pending `migrations/*.sql` files in order inside a transaction, idempotent re-run.
+- Wrote `migrations/0001_core_schema.sql` covering `tech/04_database_design.md` §1–3: `tenants`, `users`, `sessions`, `tools`, `agents`, `tasks`, `task_steps`, `task_artifacts`, `approvals`, `agent_memory`, `memory_embeddings`, `usage_records`, plus the indexes from §3.
+- Enabled `pgcrypto` (for `gen_random_uuid()`) and `vector` (pgvector) extensions in the migration.
+- Added CLI entry point `orbicrew-api-migrate` in `pyproject.toml`.
+- Applied migration to local Postgres (`resources/orbicrew_dev_infra`); verified all 13 tables + FKs/indexes via `psql \dt` / `\d agents`.
+- Added `tests/test_migrate.py` (pure-function unit tests for pending-migration selection; no live DB in automated tests, consistent with the existing mocked `test_health.py` pattern).
+- Updated `orbicrew-api/README.md` (migrations section + status line) and master `manual-test-guide.md` (0.A.5) / `phase_by_phase_development_plan.md` (0.2 → Done).
+
+### Decisions / assumptions
+- Excluded from this migration per "minus full billing surface": `subscriptions` and `api_keys` (BYO key management) — both are Phase 2 concerns. `usage_records` **is** included since it's the cost-tracking table the Phase 0.4 budget guard needs, not a billing/subscription table.
+- Excluded Orbit View tables (`orbit_*`) — Phase 3 per repo-ownership table.
+- **RLS intentionally not enabled** — phase plan constraint 3 says `tenant_id` present from day one, RLS turned on in Phase 2. All tenant-scoped tables have the column and are ready for `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` later without a schema change.
+- No HNSW/ivfflat index on `memory_embeddings.embedding` yet — doc explicitly says add once real memory volume exists; noted as a comment in the migration file.
+- Chose hand-rolled SQL migrations over Alembic/SQLAlchemy — the service already uses raw `asyncpg`, not an ORM, so a SQLAlchemy-based migration tool would be an unnecessary added dependency/abstraction.
+- No seed data (no default tenant/user) — that belongs with the Office Manager vertical slice (0.3+), not the schema task.
+
+### Manual tests run
+- `uv run pytest` — 8 passed (5 existing + 3 new migration tests)
+- `uv run orbicrew-api-migrate` — applied `0001_core_schema.sql`; second run → "No pending migrations."
+- `docker exec orbicrew-postgres psql -U orbicrew -d orbicrew -c '\dt'` — 13 tables + `schema_migrations`
+- `docker exec orbicrew-postgres psql -U orbicrew -d orbicrew -c '\d agents'` — columns, PK, FK to `tenants`, index `idx_agents_tenant_status` all present
+
+### Next recommended work
+1. Phase 0.3: LangGraph Office Manager supervisor routing to hardcoded specialists (needs a seed tenant/user — first place to add one).
+2. When adding schema changes, use the next numbered file (`migrations/0002_*.sql`); do not edit `0001` after it's applied anywhere.
+
+### Files / repos touched
+- `repos/orbicrew-api`: `migrations/0001_core_schema.sql`, `src/orbicrew_api/migrate.py`, `tests/test_migrate.py`, `pyproject.toml`, `README.md`
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md` (this entry)
+
+---
+
 ## Template for future entries
 
 ```markdown

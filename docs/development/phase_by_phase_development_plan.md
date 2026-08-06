@@ -90,7 +90,7 @@ UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_
 | # | Task | Detail | Depends on | Repos | Status |
 |---|---|---|---|---|---|
 | 0.1 | Local deps + app skeletons | Postgres+pgvector + Redis via `resources/orbicrew_dev_infra`; api/web health locally | — | master deps, api, web | **Done** — Compose healthy; FastAPI `/health`+`/ready`; Next.js status shell |
-| 0.2 | Core schema | Tables from `tech/04_database_design.md` minus full billing surface | 0.1 | api | Pending |
+| 0.2 | Core schema | Tables from `tech/04_database_design.md` minus full billing surface | 0.1 | api | **Done** — SQL migrations in `repos/orbicrew-api/migrations/`, applied to local Postgres; RLS deferred to Phase 2 |
 | 0.3 | LangGraph supervisor | Office Manager routes to hardcoded specialists | 0.2 | api | Pending |
 | 0.4 | Model router + budget guard | Classify → tier; hard per-task cap | 0.3 | api | Pending |
 | 0.5 | 2–3 specialists | Pick from real need (e.g. writing, research, coding) | 0.4 | api | Pending |

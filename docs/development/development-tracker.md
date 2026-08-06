@@ -69,7 +69,7 @@ Newest entries at the **top**.
 
 ### Decisions / assumptions
 
-- Prefer admin-inside-web over a 5th org repo until operator deploy/auth clearly diverges.
+- Prefer admin-inside-web over a 5th org repo until operator deploy/auth clearly diverges. **Superseded** — dedicated admin required.
 - Nested repos must remain independently consumable; master context stays in master docs only.
 - Logos folder currently empty — reserved and tracked for upcoming brand assets.
 

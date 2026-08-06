@@ -6,6 +6,40 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — `orbicrew-admin` auth shell
+
+**Agent / operator:** Claude Code
+**Phase:** Early admin work (per `AGENT_BOOTSTRAP.md` §5 / plan §"Admin surfaces") — not a numbered Phase 0 task, done alongside it since Phase 0.7 wrapped up.
+**Scope:** `orbicrew-admin` only — Next.js scaffold matching `orbicrew-web`'s conventions, plus a shared-secret operator login gating an empty operator console layout. No `orbicrew-api` calls (privileged `/v1/ops/*` endpoints don't exist yet — that's Phase 2.6).
+
+### Done
+- Scaffolded `orbicrew-admin` as a Next.js (App Router) + React + TypeScript + Tailwind app, mirroring `orbicrew-web`'s `package.json`/`tsconfig.json`/`eslint.config.mjs`/`postcss.config.mjs`/brand fonts (Bricolage Grotesque + Hanken Grotesk) and palette (`globals.css`).
+- `src/lib/session.ts`: HMAC-SHA256-signed, time-limited (`ORBICREW_ADMIN_SESSION_SECRET`) session cookie helpers (`createSessionCookieValue`/`isSessionValid`), and `verifyOperatorPassword` — constant-time comparison (via `timingSafeEqual` on fixed-length SHA-256 digests, so unequal-length inputs don't short-circuit) against a single shared `ORBICREW_ADMIN_OPERATOR_PASSWORD`.
+- `src/app/login/`: `page.tsx` + client `login-form.tsx` (`useActionState`/`useFormStatus`, same pattern as `orbicrew-web`'s `ChatForm`) + `actions.ts` server action — checks the password, sets an httpOnly/`sameSite=lax` session cookie (`secure` in production), redirects to `/`.
+- `src/app/(operator)/`: route group — `layout.tsx` reads the session cookie server-side and `redirect("/login")` if missing/invalid/expired, otherwise renders an operator header (nav placeholders: Overview/Tenants/Costs/Kill switch, Sign out) around `page.tsx` (an empty console placeholder explaining Phase 2.6 will wire real data). `actions.ts` holds `logoutAction` (clears the cookie, redirects to `/login`).
+- Root `src/app/layout.tsx` sets metadata to "Orbicrew Admin" and applies the same font/palette setup as `orbicrew-web`.
+- README updated: dev quickstart (`npm install` / `cp .env.example .env` / `npm run dev`) and a "Status" section describing the auth shell and what's still missing.
+
+### Decisions / assumptions
+- **Shared-secret password, not per-operator accounts** — there's no operator identity model yet (that's Phase 2.6, against `orbicrew-api`'s privileged `/v1/ops/*`). A single env-var passphrase is enough to keep the empty console from being wide open on a dev/early-access deploy without over-building auth ahead of the real requirement. Documented as a placeholder in the README, this tracker entry, and a code comment in `session.ts`.
+- **Auth check lives in a Server Component layout, not `middleware.ts`** — Next.js Middleware runs on the Edge runtime by default, which doesn't have Node's `crypto` module (only Web Crypto), so HMAC verification there would need a separate Web Crypto implementation. Doing the check in `(operator)/layout.tsx` (a normal Server Component, Node runtime) keeps one code path in `session.ts` and avoids that duplication — acceptable since this app has no other routes yet that would benefit from edge-level gating.
+- **Session cookie is a signed `expiresAt.hmac` pair, not a JWT/library** — the only claim needed right now is "a valid operator signed in before this timestamp"; a hand-rolled HMAC pair is simpler than pulling in a JWT dependency for that one bit of state, and can be swapped for real session/identity data once Phase 2.6 lands.
+- `openapi-fetch`/`openapi-typescript` were **not** added yet (unlike `orbicrew-web`, Phase 0.7) — there's no `orbicrew-api` endpoint for this app to call yet; add the typed client when Phase 2.6 wires `/v1/ops/*`.
+
+### Manual tests run
+- `npm install`, `npx tsc --noEmit` (clean), `npm run lint` (clean), `npm run build` (clean; `/`, `/_not-found`, `/login` routes generated).
+- Playwright (headless Chromium, installed with `--no-save` for this check only, not committed) against `npm run dev`: unauthenticated `/` → redirects to `/login`; wrong password → stays on `/login` with the error message; correct password → session cookie set, redirects to `/` operator console; reload stays authenticated; "Sign out" clears the cookie and redirects to `/login`; `/` after sign-out redirects to `/login` again. See manual test guide §0.E.
+
+### Next recommended work
+1. Phase 0.8: voice (optional) once the text chat path is in daily use.
+2. When Phase 2.6 (platform operator console) starts: replace the shared-secret login with real per-operator auth against `orbicrew-api`'s privileged `/v1/ops/*` endpoints, add the `openapi-typescript`/`openapi-fetch` typed client (same pattern as `orbicrew-web`, Phase 0.7), and wire the Overview/Tenants/Costs/Kill switch nav placeholders to real data.
+
+### Files / repos touched
+- `repos/orbicrew-admin`: full initial scaffold — `package.json`, `tsconfig.json`, `next.config.ts`, `eslint.config.mjs`, `postcss.config.mjs`, `.env.example`, `AGENTS.md`/`CLAUDE.md` (Next.js-generated), `src/lib/session.ts`, `src/app/layout.tsx`, `src/app/globals.css`, `src/app/login/{page,login-form,actions}.tsx`, `src/app/(operator)/{layout,page,actions}.tsx`, `README.md`
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md` (this entry)
+
+---
+
 ## 2026-08-07 — Phase 0.7: OpenAPI + generated TS client
 
 **Agent / operator:** Claude Code

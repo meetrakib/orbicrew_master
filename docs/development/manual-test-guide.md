@@ -19,7 +19,7 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 | Shared deps (Postgres, Redis) | `resources/orbicrew_dev_infra` — `docker compose up -d` | Available |
 | API reachable | Native: `cd repos/orbicrew-api && uv sync && uv run orbicrew-api` → `http://localhost:8000` | Available (Phase 0.1) |
 | Web reachable | Native: `cd repos/orbicrew-web && npm install && npm run dev` → `http://localhost:3000` | Available (Phase 0.1) |
-| Admin reachable | Native process in `repos/orbicrew-admin` (TBD URL) | Not yet |
+| Admin reachable | Native: `cd repos/orbicrew-admin && npm install && npm run dev` → `http://localhost:3000` (or next free port) | Available (auth shell) |
 | Test tenant / user | TBD | Not yet |
 | Model keys / LiteLLM | `.env` (never commit) | Not yet |
 
@@ -96,6 +96,16 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 | 0.D.1 | STT | Spoken input becomes correct-enough text in primary language | Pending |
 | 0.D.2 | TTS | Reply plays back | Pending |
 
+### 0.E Admin auth shell
+
+| # | Check | Expected | Status |
+|---|---|---|---|
+| 0.E.1 | Unauthenticated root redirect | Visiting `/` in `orbicrew-admin` without a session cookie redirects to `/login` | Pass (2026-08-07) |
+| 0.E.2 | Wrong password rejected | Submitting an incorrect operator password on `/login` stays on `/login` and shows "Incorrect operator password." | Pass (2026-08-07) |
+| 0.E.3 | Correct password signs in | Submitting the correct `ORBICREW_ADMIN_OPERATOR_PASSWORD` sets a signed session cookie and redirects to `/` (operator console placeholder) | Pass (2026-08-07) |
+| 0.E.4 | Session persists on reload | Reloading `/` after signing in stays on `/` (cookie still valid) | Pass (2026-08-07) |
+| 0.E.5 | Sign out clears session | Clicking "Sign out" redirects to `/login`; visiting `/` again afterward redirects back to `/login` | Pass (2026-08-07) |
+
 ---
 
 ## Phase 1 — Overnight + channels
@@ -147,6 +157,7 @@ Add dated notes when a manual bug is found in the wild:
 
 | Date | Change |
 |---|---|
+| 2026-08-07 | 0.E added — Admin auth shell checks, all Pass; Admin prerequisite row updated |
 | 2026-08-07 | 0.A.6 added — OpenAPI + TS client (Phase 0.7) typed contract checks, all Pass |
 | 2026-08-07 | 0.B.1 marked Pass — Standard chat GUI (Phase 0.6) verified live via Playwright |
 | 2026-08-07 | 0.B.3/0.B.4 marked Pass — Model Router + Budget Guard (Phase 0.4) verified live |

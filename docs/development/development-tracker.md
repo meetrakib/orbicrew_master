@@ -6,6 +6,117 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — Phase 1.3: Approval gates (resolve the Phase 1.2 escalations)
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 (Overnight autonomy + multi-channel) — task 1.3
+**Scope:** `orbicrew-api` (new approvals router) + `orbicrew-web` (first second page, `/approvals`).
+
+### Done
+- Explicit scope decision (user-confirmed before implementation): the product docs
+  (`tech/03_system_design.md`, `tech/05_api_design.md`) describe approval gates as a generic
+  pre-action gate — a task blocks *before* a risky/external action runs
+  (`AwaitingApproval → Running`/`Cancelled`), driven by an `agents.action_whitelist` that nothing
+  in the codebase enforces yet. That doesn't fit what exists: no specialist performs an
+  external/irreversible action (they only return LLM text), so a pre-action whitelist gate would
+  have nothing real to guard. Built the narrower, concrete thing instead: a real resolve flow for
+  the two escalation types Phase 1.2 already writes into `approvals`
+  (`tenant_daily_cap_exceeded`, `task_failure_escalation`). The broader pre-action gate is
+  deferred until a specialist actually needs one.
+- Second explicit decision: the LangGraph checkpoint for a paused/failed thread is already at
+  `END`, so "approve" re-enqueuing the same `task_id` would no-op (nothing left for that thread to
+  run). Approve instead spawns a **fresh task row** with the same input — a new `task_id` means a
+  new checkpoint thread, no collision — bypassing the specific cap that caused the escalation for
+  that one run. The original task/approval remain as the historical record, linked via new
+  `approvals.resulting_task_id`. Reject just marks the approval resolved; no task mutation.
+- `migrations/0003_approval_gates.sql`: `tasks.bypass_tenant_daily_cap boolean default false`;
+  `approvals.resulting_task_id uuid references tasks(id)`; a `check (status in ('pending',
+  'approved', 'rejected'))` constraint on `approvals.status` (previously unconstrained).
+- `src/orbicrew_api/tasks.py`: extracted `create_and_enqueue_task(...)` (insert task row + arq
+  enqueue, including the existing enqueue-failure → `status='failed'` handling) out of
+  `_enqueue_task`'s body so both `POST /v1/tasks` and the new approve handler share one
+  insert-and-enqueue path instead of duplicating it.
+- New `src/orbicrew_api/approvals.py`: `GET /v1/approvals?status=` (default `pending`, "morning
+  inbox" framing from the docs), `POST /v1/approvals/{id}/approve`, `POST
+  /v1/approvals/{id}/reject` — tenant-scoped via `DEFAULT_TENANT_ID`, 404 on missing/wrong-tenant,
+  409 (new status code in this codebase) on an already-resolved approval. Approve calls
+  `create_and_enqueue_task(..., bypass_tenant_daily_cap=(approval_type ==
+  'tenant_daily_cap_exceeded'))`. Wired into `main.py`.
+- `office_manager.py`/`worker.py`: `bypass_tenant_daily_cap` threaded through
+  `OfficeManagerState` as a real boolean, checked in `_route_condition` to skip the aggregate
+  check entirely rather than mathematically forcing it to always pass.
+- `orbicrew-web`: `src/lib/api-approvals.ts` (mirrors `api-tasks.ts`'s `{ok,...}` convention);
+  `src/app/approvals/page.tsx` (server component, lists pending approvals or an empty state),
+  `approval-item.tsx` (client component, `useActionState` + bound server actions per
+  approve/reject button, matching `chat-form.tsx`'s pattern), `actions.ts` (server actions calling
+  `revalidatePath("/approvals")` on success so the resolved item drops out of the list on the next
+  render — no manual `router.refresh()` needed). Regenerated `api-schema.d.ts`. Added a plain
+  `/approvals` link from the home page — **not** the full sidebar nav shown in the Stitch mockup
+  (`resources/stitch_orbicrew_ui_ux_guide/orbicrew_approvals_inbox/`); building that shell was
+  explicitly out of scope for this slice.
+- Tests: new `tests/test_approvals.py` (list/approve/reject/404/409, mocked `pg_pool`/`arq_pool`,
+  same style as `test_tasks.py`); `test_worker.py` and `test_office_manager.py` extended for the
+  bypass flag.
+
+### Bug caught during manual testing (fixed before landing)
+- First implementation passed `tenant_daily_cap_usd=float("inf")` to bypass the aggregate check
+  instead of a real boolean. This crashed the *second* worker run with
+  `psycopg.errors.InvalidTextRepresentation: invalid input syntax for type json` /
+  `Token "Infinity" is invalid` — the LangGraph Postgres checkpointer writes graph state as a JSON
+  blob, and Postgres's strict JSON parser rejects the literal `Infinity` token that Python's
+  default float-to-JSON path produces (confirmed live: `run_office_manager` worked fine
+  standalone since no checkpointer was involved in that reproduction, but failed the moment a real
+  worker run persisted state to Postgres). Fixed by adding a real `bypass_tenant_daily_cap: bool`
+  to `OfficeManagerState` and short-circuiting the aggregate check in `_route_condition`, instead
+  of smuggling the bypass through a numeric sentinel. Worth remembering generally: don't pass
+  `float("inf")`/`nan` into any LangGraph-checkpointed state — it round-trips through Postgres
+  JSON.
+
+### Manual tests run
+- `uv run pytest` — 45 passed (up from 36).
+- `uv run orbicrew-api-migrate` — `0003_approval_gates.sql` applied cleanly against the live local
+  Postgres (no existing rows violated the new `approvals.status` check constraint).
+- Live end-to-end round trip (api + worker running natively): reused a `tenant_daily_cap_exceeded`
+  approval from Phase 1.2's own manual testing, `POST .../approve` → new task row created,
+  completed for real (`status: done`, real Anthropic output, `usage_records` written) despite the
+  tenant cap still being exceeded; confirmed the original approval was `status: approved` with
+  `resulting_task_id` pointing at the new task. `POST .../reject` on a `task_failure_escalation`
+  row → `status: rejected`, no new task, original task untouched. Double-approve/double-reject on
+  an already-resolved id → 409; approve/reject on a random id → 404.
+- `orbicrew-web`: `npx tsc --noEmit`, `npm run lint` (0 errors/warnings after adding targeted
+  `eslint-disable` comments for the two trailing `useActionState`-required-but-unused server
+  action params — same pattern React requires elsewhere in this codebase), `npm run build` all
+  clean; `/approvals` confirmed server-rendering both the empty state and a populated approval
+  card (via a live Postgres row) with correct fields and Approve/Reject buttons present.
+- Process hygiene note: mid-session discovered the user's own long-running `orbicrew-api` (with
+  `reload=True`) and `orbicrew-web`/`orbicrew-admin` dev servers were already running in separate
+  terminals throughout this session; this agent's own ad hoc `uv run uvicorn --port 8000`
+  instances almost certainly lost the port-8000 bind race each time and exited quietly, meaning
+  the user's own reload-enabled server (auto-picking up each file edit) served all of this
+  session's manual API testing. Functionally harmless (same code, same DB) but worth knowing for
+  future sessions — check `lsof -nP -iTCP:8000` before assuming a background `uvicorn` command
+  actually bound the port.
+
+### Next recommended work
+1. Phase 1.4 — morning summary: consolidated overnight report; a natural place to also surface
+   `approvals` rows created overnight (currently only visible by visiting `/approvals` or polling
+   `GET /v1/approvals`).
+2. If a specialist ever needs to perform a real external/irreversible action, revisit the broader
+   pre-action `AwaitingApproval` gate described in the docs — this slice deliberately did not
+   build it.
+
+### Files / repos touched
+- `repos/orbicrew-api`: `migrations/0003_approval_gates.sql` (new), `src/orbicrew_api/approvals.py`
+  (new), `src/orbicrew_api/tasks.py`, `src/orbicrew_api/worker.py`, `src/orbicrew_api/office_manager.py`,
+  `src/orbicrew_api/main.py`, `tests/test_approvals.py` (new), `tests/test_worker.py`,
+  `tests/test_office_manager.py`, `README.md`
+- `repos/orbicrew-web`: `src/lib/api-approvals.ts` (new), `src/app/approvals/` (new: `page.tsx`,
+  `approval-item.tsx`, `actions.ts`), `src/app/page.tsx`, `src/lib/api-schema.d.ts`
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`,
+  `docs/development/development-tracker.md` (this entry)
+
+---
+
 ## 2026-08-07 — Phase 1.2: Budget hardening (nightly aggregate caps + retry-then-escalate)
 
 **Agent / operator:** Claude Code

@@ -74,7 +74,7 @@ UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_
 
 ---
 
-## Phase 0 — Personal tool (validate for yourself first) *(current)*
+## Phase 0 — Personal tool (validate for yourself first)
 
 **Goal:** founder uses Orbicrew daily on real work before multi-tenant/sellable product work.
 
@@ -104,19 +104,21 @@ UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_
 
 ---
 
-## Phase 1 — Overnight autonomy + multi-channel
+## Phase 1 — Overnight autonomy + multi-channel *(current)*
 
 **Goal:** prove safe unattended execution and “one backend, many faces.”
 
-| # | Task | Detail | Depends on | Repos |
-|---|---|---|---|---|
-| 1.1 | Task queue + checkpointing | Redis + Celery (or chosen queue); LangGraph persistence | Phase 0 | api, infra |
-| 1.2 | Budget hardening | Nightly aggregate caps; retry-then-escalate | 1.1 | api |
-| 1.3 | Approval gates | `approvals` flow end-to-end | 1.2 | api, web |
-| 1.4 | Morning summary | Consolidated overnight report on preferred channel | 1.3 | api, channels/web |
-| 1.5 | Telegram adapter | First multi-channel proof | Core API stable | channels |
-| 1.6 | WhatsApp adapter | Start Business API verification early (external lead time) | 1.5 pattern | channels |
-| 1.7 | Research agent + tools | Web search/fetch wired for real research | Phase 0 agents | api |
+Started ahead of the Phase 0.9 daily-use soak, at explicit user request — see `development-tracker.md` for the decision.
+
+| # | Task | Detail | Depends on | Repos | Status |
+|---|---|---|---|---|---|
+| 1.1 | Task queue + checkpointing | Redis + Celery (or chosen queue); LangGraph persistence | Phase 0 | api, infra | **Done** — `arq` (Redis-backed, async-native) replaces synchronous execution in `POST /v1/tasks` (now enqueues, returns `status: "queued"` immediately); `src/orbicrew_api/worker.py` runs the Office Manager graph off-request; graph compiled with a Postgres-backed LangGraph checkpointer (`langgraph-checkpoint-postgres`) keyed by `thread_id = task_id`, so a crashed/restarted worker resumes from the last completed node instead of restarting. `orbicrew-web`'s `chat-form.tsx` now polls `GET /v1/tasks/:id` until a terminal status |
+| 1.2 | Budget hardening | Nightly aggregate caps; retry-then-escalate | 1.1 | api | **Done** — `budget_guard.check_budget` reused for a rolling-24h per-tenant aggregate cap (`settings.tenant_daily_cap_usd`, checked alongside the per-task cap in `office_manager._route_condition`; pauses with `pause_type: "daily_cap"`); `worker.py` no longer fails a task on its first exception — it retries with exponential backoff (`task_max_retries`/`task_retry_base_delay_seconds`/`task_retry_max_delay_seconds`) by re-enqueuing the same `task_id` via arq's `_defer_by` (cheap: the LangGraph checkpointer resumes past already-completed nodes), tracked via new `tasks.retry_count`. Both a daily-cap pause and retries-exhausted failure now write an `approvals` escalation row (`migrations/0002_budget_hardening.sql` adds `tasks.retry_count` and `approvals.tenant_id`/`approval_type`) — the table was previously schema-only |
+| 1.3 | Approval gates | `approvals` flow end-to-end | 1.2 | api, web | Pending |
+| 1.4 | Morning summary | Consolidated overnight report on preferred channel | 1.3 | api, channels/web | Pending |
+| 1.5 | Telegram adapter | First multi-channel proof | Core API stable | channels | Pending |
+| 1.6 | WhatsApp adapter | Start Business API verification early (external lead time) | 1.5 pattern | channels | Pending |
+| 1.7 | Research agent + tools | Web search/fetch wired for real research | Phase 0 agents | api | Pending |
 
 **Exit criteria:** hand off a real project at night; wake to a morning summary; at least one messaging channel works alongside the chat GUI.
 
@@ -179,6 +181,9 @@ Do **not** prioritize unless re-scoped:
 6. ~~Phase 0.7: OpenAPI + generated TS client (replace the hand-written `Task`/`SubmitTaskRequest` types in `orbicrew-web`).~~ **Done**.
 7. ~~`orbicrew-admin` auth shell (empty operator layout).~~ **Done**.
 8. ~~Phase 0.8: voice (optional) once the text chat path is in daily use.~~ **Done**.
-9. Phase 0.9: daily-use soak — 2-3 weeks of real personal use before starting Phase 1.
+9. Phase 0.9: daily-use soak — 2-3 weeks of real personal use before starting Phase 1 (superseded — Phase 1 started early at explicit user request; see `development-tracker.md`).
+10. ~~Phase 1.1: task queue (`arq`) + LangGraph Postgres checkpointing.~~ **Done**.
+11. ~~Phase 1.2: budget hardening — nightly (rolling 24h) aggregate caps + retry-then-escalate.~~ **Done**.
+12. Phase 1.3: approval gates — read/resolve API + UI for the `approvals` rows Phase 1.2 now writes.
 
 Update the development tracker after each completed slice.

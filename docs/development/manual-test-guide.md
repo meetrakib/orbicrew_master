@@ -18,6 +18,7 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 |---|---|---|
 | Shared deps (Postgres, Redis) | `resources/orbicrew_dev_infra` — `docker compose up -d` | Available |
 | API reachable | Native: `cd repos/orbicrew-api && uv sync && uv run orbicrew-api` → `http://localhost:8000` | Available (Phase 0.1) |
+| Worker running | Native: `cd repos/orbicrew-api && uv run arq orbicrew_api.worker.WorkerSettings` (separate process; executes queued tasks) | Available (Phase 1.1) |
 | Web reachable | Native: `cd repos/orbicrew-web && npm install && npm run dev` → `http://localhost:3000` | Available (Phase 0.1) |
 | Admin reachable | Native: `cd repos/orbicrew-admin && npm install && npm run dev` → `http://localhost:3000` (or next free port) | Available (auth shell) |
 | Test tenant / user | TBD | Not yet |
@@ -114,12 +115,14 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 
 | # | Check | Expected | Status |
 |---|---|---|---|
-| 1.1 | Overnight handoff | Long task resumes after worker restart (checkpoint) | Pending |
-| 1.2 | Approval gate | Restricted action waits for approval; does not execute | Pending |
-| 1.3 | Morning summary | Summary lists done / blocked / needs decision with links | Pending |
-| 1.4 | Telegram round-trip | Message → task → status/result on Telegram | Pending |
-| 1.5 | Cross-channel continuity | Task started on web visible on Telegram (or vice versa) | Pending |
-| 1.6 | WhatsApp round-trip | When Business API ready | Pending |
+| 1.1 | Overnight handoff | `POST /v1/tasks` → `status: queued`; submit, `kill -9` the worker mid-run, confirm the task is stuck at `running` with checkpoint rows in Postgres (`checkpoints` table, keyed by `thread_id = task_id`); restart the worker, re-enqueue the same task id; task completes without re-running `classify`/`route` (checkpoint count grows by exactly one, `task_steps` has no duplicates) | Pass (2026-08-07) |
+| 1.2a | Tenant daily cap | Lower `TENANT_DAILY_CAP_USD` (or submit enough tasks) so `sum(usage_records.cost_usd)` over the trailing 24h plus a new task's estimated cost exceeds the cap → task ends `status: paused` with `steps` ending in `daily_cap_pause`, no new `usage_records` row, and an `approvals` row (`approval_type = 'tenant_daily_cap_exceeded'`) appears for the task | Pass (2026-08-07) |
+| 1.2b | Retry-then-escalate | Force execution failures (e.g. temporarily set `ANTHROPIC_API_KEY` to an invalid value, optionally lower `TASK_MAX_RETRIES`/`TASK_RETRY_BASE_DELAY_SECONDS` for a fast test) → `tasks.retry_count` increments and `status` cycles `running`→`queued`→`running` on each attempt; once `retry_count` exceeds `TASK_MAX_RETRIES`, task ends `status: failed` and an `approvals` row (`approval_type = 'task_failure_escalation'`) appears with the error message | Pass (2026-08-07) |
+| 1.3 | Approval gate | Restricted action waits for approval; does not execute | Pending |
+| 1.4 | Morning summary | Summary lists done / blocked / needs decision with links | Pending |
+| 1.5 | Telegram round-trip | Message → task → status/result on Telegram | Pending |
+| 1.6 | Cross-channel continuity | Task started on web visible on Telegram (or vice versa) | Pending |
+| 1.7 | WhatsApp round-trip | When Business API ready | Pending |
 
 ---
 
@@ -159,6 +162,7 @@ Add dated notes when a manual bug is found in the wild:
 
 | Date | Change |
 |---|---|
+| 2026-08-07 | Phase 1 table renumbered — 1.2a/1.2b (tenant daily cap, retry-then-escalate) inserted; former 1.2–1.6 shifted to 1.3–1.7 |
 | 2026-08-07 | 0.E added — Admin auth shell checks, all Pass; Admin prerequisite row updated |
 | 2026-08-07 | 0.A.6 added — OpenAPI + TS client (Phase 0.7) typed contract checks, all Pass |
 | 2026-08-07 | 0.B.1 marked Pass — Standard chat GUI (Phase 0.6) verified live via Playwright |

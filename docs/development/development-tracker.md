@@ -6,6 +6,75 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — Phase 1.2: Budget hardening (nightly aggregate caps + retry-then-escalate)
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 (Overnight autonomy + multi-channel) — task 1.2
+**Scope:** `orbicrew-api` only.
+
+### Done
+- `migrations/0002_budget_hardening.sql`: `tasks` gains `retry_count int not null default 0`; `approvals` (previously schema-only — zero application code touched it) gains `tenant_id uuid not null references tenants (id)` (backfilled from `tasks.tenant_id`) and `approval_type text not null default 'manual'`, plus `idx_approvals_tenant_status`.
+- `settings.py`: `tenant_daily_cap_usd` (default `$20.00`), `task_max_retries` (default `3`), `task_retry_base_delay_seconds` (default `30`), `task_retry_max_delay_seconds` (default `300`) — all `.env`-overridable.
+- `budget_guard.check_budget` is unchanged (same math, docstring updated) and is now called **twice** from `office_manager._route_condition`: once with the existing per-task inputs, once with per-tenant rolling-24h aggregate inputs (`tenant_spend_24h_usd`/`tenant_daily_cap_usd`, computed by `worker.py` from `usage_records` and passed into `run_office_manager` — the graph itself still has no DB access, matching the existing pattern for `spend_so_far_usd`). A new `daily_cap_paused` node/edge mirrors `budget_paused` but sets `pause_type: "daily_cap"` (vs `"per_task"`) on the returned state, which `worker.py` reads to decide whether to escalate.
+- `worker.py`: `run_task_job` no longer marks a task `failed` and re-raises on the first exception. New `_handle_task_failure` increments `tasks.retry_count`; under `task_max_retries` it sets `status = 'queued'` and re-enqueues the same `task_id` via `ctx["redis"].enqueue_job(..., _defer_by=delay)` (arq always injects `ctx["redis"]`, the same pool the worker runs on — no new pool needed) with exponential backoff (`min(base * 2**(retry_count-1), max_delay)`); once exhausted it sets `status = 'failed'` and inserts an `approvals` row (`approval_type = 'task_failure_escalation'`) with the exception message. Separately, after a successful graph run, a `pause_type == "daily_cap"` result also inserts an `approvals` row (`approval_type = 'tenant_daily_cap_exceeded'`). A per-task pause (`pause_type == "per_task"`) does **not** escalate — that's an immediate response already visible to the task submitter via `GET /v1/tasks/:id`, not an unattended-run scenario.
+- Tests: `tests/test_worker.py` gained daily-cap-escalation, retry-under-limit, and retry-exhausted-escalation cases (replacing the old single "marks failed on exception" test, which no longer matches worker behavior); `tests/test_office_manager.py` gained a daily-cap-pause routing test and a `pause_type` assertion on the existing per-task pause test.
+
+### Decisions / assumptions
+- **Rolling 24h window, not calendar-day reset** — avoids timezone/reset-boundary design questions and needs no cron job; the aggregate check is inline in the same place the per-task check already runs, using the existing `idx_usage_records_tenant_created` index (`select coalesce(sum(cost_usd),0) from usage_records where tenant_id=$1 and created_at >= now() - interval '24 hours'`).
+- **`check_budget` reused as-is for both scopes** — the remaining-budget math is identical; only the inputs' semantics differ. No new budget-math function was added (DRY per this workspace's coding principles).
+- **Manual/app-level retry, not arq's built-in retry** — `run_task_job` never re-raises anymore, so arq's own per-function retry (unused/unconfigured here) never engages; all retry state (`retry_count`) lives in the `tasks` row so it survives across separate arq job instances (each retry is a fresh `enqueue_job` call, not the same job retried by arq).
+- **Escalation via the existing (previously unused) `approvals` table**, not a new notification mechanism — no email/Slack/webhook exists yet (that's future scope, likely alongside Phase 1.4's morning summary); `approvals` rows are currently write-only from this slice, with no read/resolve API or UI (that's explicitly Phase 1.3).
+- **Retries are cheap because of the Phase 1.1 checkpointer** — re-enqueuing reuses the same `task_id` as the LangGraph `thread_id`, so a retry resumes from the last node that completed successfully (e.g. a specialist-call failure retries just that call, not `classify`/`route`).
+
+### Manual tests run
+- `uv run pytest` — 36 passed (up from 33; net +3: two exception-path tests replaced one, plus one new daily-cap-escalation worker test and one new daily-cap-pause office_manager test — see exact breakdown in Done above).
+- `uv run orbicrew-api-migrate` against the live local Postgres — applied `0002_budget_hardening.sql` cleanly (no pre-existing `approvals` rows to backfill).
+- Live end-to-end round trip (API + worker running natively against `resources/orbicrew_dev_infra`): restarted the worker with `TENANT_DAILY_CAP_USD` set just above existing 24h spend (`$0.31` vs `$0.3007` already spent), submitted a task → ended `status: "paused"`, `steps` ending in `daily_cap_pause`, and confirmed via `psql` an `approvals` row (`approval_type = 'tenant_daily_cap_exceeded'`) referencing that task.
+- Restarted the worker with an invalid `ANTHROPIC_API_KEY` and `TASK_MAX_RETRIES=2`/fast backoff, submitted a task → confirmed via `psql` polling that `tasks.retry_count` climbed `0→1→2→3` across attempts (status cycling `running`→`queued`→`running`...), the task ended `status: "failed"` after exhausting retries, and an `approvals` row (`approval_type = 'task_failure_escalation'`, containing the real Anthropic 401 error message) was written.
+
+### Next recommended work
+1. Phase 1.3 — approval gates: a real read/resolve API + UI for the `approvals` rows this slice now writes (currently write-only; nothing surfaces `status: 'pending'` approvals anywhere).
+2. Phase 1.4 — morning summary: a natural place to also surface `approvals` rows created overnight, once 1.3 exists.
+
+### Files / repos touched
+- `repos/orbicrew-api`: `migrations/0002_budget_hardening.sql` (new), `src/orbicrew_api/settings.py`, `src/orbicrew_api/budget_guard.py`, `src/orbicrew_api/office_manager.py`, `src/orbicrew_api/worker.py`, `tests/test_worker.py`, `tests/test_office_manager.py`, `README.md`
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md` (this entry)
+
+---
+
+## 2026-08-07 — Phase 1.1: Task queue + checkpointing
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 (Overnight autonomy + multi-channel) — task 1.1
+**Scope:** `orbicrew-api` (async task queue + LangGraph checkpointing) + `orbicrew-web` (poll for task completion instead of treating the submit response as final).
+
+### Done
+- `repos/orbicrew-api`: added `arq` and `langgraph-checkpoint-postgres` deps. `POST /v1/tasks` (`src/orbicrew_api/tasks.py`) now inserts the task row (`status: "queued"`), enqueues `run_task_job` via `state.arq_pool` (new `arq_pool: ArqRedis` on `AppState`, `deps.py`), and returns immediately — it no longer runs the Office Manager graph inline. New `src/orbicrew_api/worker.py` (arq `WorkerSettings`, run via `uv run arq orbicrew_api.worker.WorkerSettings`) owns execution: `run_task_job` loads the task, runs `run_office_manager`, and persists steps/`usage_records`/final status — the same persistence logic that used to live in the HTTP handler, moved wholesale (not duplicated). `office_manager.py`'s `build_graph`/`run_office_manager` gained `checkpointer`/`thread_id` params; the graph is compiled with `langgraph-checkpoint-postgres`'s `AsyncPostgresSaver` (against the same `database_url`, keyed by `thread_id = task_id`), and `run_office_manager` checks `checkpointer.aget_tuple(config)` to decide between a fresh `ainvoke(initial_state, config)` and a resuming `ainvoke(None, config)`. `TaskResponse.status` gained `"queued"`.
+- `repos/orbicrew-web`: `chat-form.tsx` no longer treats the `POST /v1/tasks` response as final (it's now `"queued"` immediately) — it polls `GET /v1/tasks/:id` (new `getTask()` in `api-tasks.ts`) every 1.5s until a terminal status, merging into the existing `state.task` render path so the rest of the UI (spend/output/TTS) is unaffected. Regenerated `api-schema.d.ts`.
+
+### Decisions / assumptions
+- **`arq`, not Celery** (the product docs literally say "Redis + BullMQ/Celery", bootstrap doc says "or chosen queue") — user's explicit choice after a trade-off review. The whole stack is already async (`asyncpg`, `redis.asyncio`, LangGraph's `ainvoke`); arq's worker functions are plain `async def`s that drop straight in, vs. Celery's sync worker model needing `asyncio.run()` wrapping everywhere plus a separate result-backend config. `arq==0.25.0` was pinned by dependency resolution (`arq>=0.26` requires `redis<6`, which conflicts with the `redis>=6.2.0` already in use for readiness checks).
+- **Postgres-backed checkpointer, not in-memory** — `tech/03_system_design.md`'s "every long-running task is resumable... checkpointed state, not in-memory-only execution" principle rules out `MemorySaver` for real use; reuses the existing Postgres instance rather than adding a new datastore. The checkpointer's own tables (`checkpoints`, `checkpoint_writes`, etc.) are created via `AsyncPostgresSaver.setup()` on worker startup — deliberately **not** one of the hand-rolled `migrations/*.sql` files, since that schema is owned/versioned by the `langgraph-checkpoint-postgres` library, not this app.
+- **Resume semantics rely on arq's default in-progress lock timeout, not custom heartbeat/redelivery logic** — if a worker is killed, the job's in-progress marker in Redis expires on arq's default schedule before another worker instance can pick it back up; no custom crash-detection was built (would be premature for a single-user phase). Manually verified end-to-end instead (see below) by re-enqueueing the same `task_id` after a kill, which is the same code path a redelivery would take.
+- Task-step persistence (the `task_steps` table) is still an all-at-once write after the graph fully returns, not per-node — the actual resumability mechanism is LangGraph's own checkpoint tables, not `task_steps`. This means a crash before the graph returns leaves `task_steps` empty for that task even though checkpoints exist; acceptable since `task_steps` is a post-hoc summary, not the source of truth for resume.
+
+### Manual tests run
+- `uv run pytest` (orbicrew-api) — 33 passed (up from 28; new `test_worker.py` adds 4, `test_office_manager.py` gains 1 resume test, `test_tasks.py`'s POST tests were rewritten in place for enqueue behavior — net count unchanged there).
+- `npx tsc --noEmit`, `npm run lint`, `npm run build` (orbicrew-web) — all clean.
+- Real end-to-end round trip: started Postgres/Redis (already up via `resources/orbicrew_dev_infra`), ran the API and a worker natively, `POST /v1/tasks` → confirmed immediate `status: "queued"`, polled `GET /v1/tasks/:id` → `running` → `done` with a real Anthropic `claude-haiku-4-5` response and correct `usage_records`/step trace.
+- Crash/resume: submitted a second task, `kill -9`'d the worker ~50ms later (mid-specialist-call). Confirmed via `docker exec orbicrew-postgres psql`: task stuck at `status: "running"`, 4 rows in the `checkpoints` table for that `thread_id`, 0 rows in `task_steps`. Restarted the worker, manually re-enqueued the same `task_id` (simulating redelivery) — it resumed and completed in one more checkpoint (5 total, not 4 fresh ones) with exactly 3 `task_steps` rows (`classify`/`route`/`specialist_execute`, no duplicates) — confirms `classify`/`route` were not re-run.
+
+### Next recommended work
+1. Phase 1.2 — budget hardening (nightly aggregate caps, retry-then-escalate).
+2. If real overnight (multi-hour) autonomous runs become common, revisit the "no custom heartbeat/redelivery" assumption above — arq's default in-progress lock timeout may be too long or too short depending on real task durations.
+
+### Files / repos touched
+- `repos/orbicrew-api`: `src/orbicrew_api/tasks.py`, `src/orbicrew_api/office_manager.py`, `src/orbicrew_api/worker.py` (new), `src/orbicrew_api/deps.py`, `pyproject.toml`, `uv.lock`, `tests/test_tasks.py`, `tests/test_worker.py` (new), `tests/test_office_manager.py`, `README.md`
+- `repos/orbicrew-web`: `src/lib/api-tasks.ts`, `src/app/chat-form.tsx`, `src/lib/api-schema.d.ts`
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md` (this entry)
+
+---
+
 ## 2026-08-07 — Phase 0.8: Voice (Whisper STT + TTS)
 
 **Agent / operator:** Claude Code

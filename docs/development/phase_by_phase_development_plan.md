@@ -96,7 +96,7 @@ UI references for dashboard/settings/billing: master `resources/stitch_orbicrew_
 | 0.5 | 2–3 specialists | Pick from real need (e.g. writing, research, coding) | 0.4 | api | **Done** — `llm_client.py`; coding/writing/research/general specialist nodes call the real Anthropic API at the router-selected model; actual cost from real token usage persisted to `usage_records`/`tasks.spend_so_far_usd` |
 | 0.6 | Standard chat GUI | Text I/O + task status | 0.4 | web | **Done** — `ChatForm` client component + `submitTaskAction` server action in `orbicrew-web`; posts to `POST /v1/tasks` server-side (no browser CORS) and renders status/specialist/tier/model/spend/output |
 | 0.7 | OpenAPI + TS client | Typed contract web ↔ api | 0.3–0.6 | api, web | **Done** — `orbicrew-web` generates `src/lib/api-schema.d.ts` from `orbicrew-api`'s `/openapi.json` (`npm run codegen:api-types`, `openapi-typescript`) and calls it through a typed `openapi-fetch` client (`src/lib/api-client.ts`); `api-status.ts`/`api-tasks.ts` no longer hand-write `Task`/`SubmitTaskRequest`-shaped types |
-| 0.8 | Voice (optional early) | Whisper STT + TTS for founder languages | 0.6 | api, web | Pending |
+| 0.8 | Voice (optional early) | Whisper STT + TTS for founder languages | 0.6 | api, web | **Done** — `orbicrew-api`: `voice.py` (`POST /v1/voice/transcribe` via OpenAI `whisper-1`, `POST /v1/voice/speak` via OpenAI `tts-1`); `orbicrew-web`: mic button in `ChatForm` records via `MediaRecorder`, transcribes through a same-origin Route Handler proxy, auto-submits the task, and auto-plays the spoken reply (with visible `<audio controls>` as an autoplay-blocked fallback) |
 | 0.9 | Daily-use soak | 2–3 weeks real work before Phase 1 | all above | — | Pending |
 | — | `orbicrew-admin` auth shell | Next.js scaffold + shared-secret operator login gating an empty operator console layout | — | admin | **Done** — `src/lib/session.ts` (HMAC-signed session cookie) + `/login` (shared-secret password check) gate `(operator)` route group; nav placeholders (Overview/Tenants/Costs/Kill switch), no `orbicrew-api` calls yet; full features + real operator auth remain Phase 2.6 |
 
@@ -178,6 +178,7 @@ Do **not** prioritize unless re-scoped:
 5. ~~Phase 0.6: thinnest chat UI that submits a task and shows status.~~ **Done**.
 6. ~~Phase 0.7: OpenAPI + generated TS client (replace the hand-written `Task`/`SubmitTaskRequest` types in `orbicrew-web`).~~ **Done**.
 7. ~~`orbicrew-admin` auth shell (empty operator layout).~~ **Done**.
-8. Phase 0.8: voice (optional) once the text chat path is in daily use.
+8. ~~Phase 0.8: voice (optional) once the text chat path is in daily use.~~ **Done**.
+9. Phase 0.9: daily-use soak — 2-3 weeks of real personal use before starting Phase 1.
 
 Update the development tracker after each completed slice.

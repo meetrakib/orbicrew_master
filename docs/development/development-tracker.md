@@ -6,6 +6,42 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-07 — Phase 0.8: Voice (Whisper STT + TTS)
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 0 (Personal tool) — task 0.8
+**Scope:** `orbicrew-api` (two new endpoints) + `orbicrew-web` (mic recording, auto-submit, auto-play).
+
+### Done
+- `repos/orbicrew-api`: added `openai` + `python-multipart` deps. New `src/orbicrew_api/voice.py`: `POST /v1/voice/transcribe` (multipart audio upload → OpenAI `whisper-1` → `{text}`) and `POST /v1/voice/speak` (JSON `{text}` → OpenAI `tts-1` → raw `audio/mpeg` bytes). `settings.py` gained `openai_api_key`; `.env.example` documents `OPENAI_API_KEY`. Wired into `main.py`. Tests in `tests/test_voice.py` (mocked OpenAI client): happy path + empty-input 422s + upstream-error 502 for both endpoints.
+- `repos/orbicrew-web`: two Route Handlers (`src/app/api/voice/transcribe/route.ts`, `.../speak/route.ts`) proxy to `orbicrew-api` server-side — same "avoid browser CORS + keep the API URL server-only" pattern as `submitTaskAction`, and deliberately Route Handlers rather than Server Actions because Server Actions cap request bodies at 1MB by default (recorded audio can exceed that) and aren't a natural fit for streaming a binary MP3 response.
+- `chat-form.tsx`: added a "Record" button using `MediaRecorder` (prefers `audio/webm`) to capture mic audio; on stop, uploads the blob to `/api/voice/transcribe`, fills the (uncontrolled, ref-based) textarea with the transcript, and calls `formRef.current.requestSubmit()` to auto-submit — no second manual click needed (matches the "full voice loop" scope the user picked over a minimal fill-only version). A `useEffect` keyed on `state.task` fetches `/api/voice/speak` for the completed task's output once (deduped via a ref holding the last-spoken task id), turns the MP3 into a blob URL, and renders `<audio autoPlay controls>` — `controls` stays visible so a browser autoplay block still leaves a manual play option.
+- Regenerated `src/lib/api-schema.d.ts` (`npm run codegen:api-types`) so the new endpoints are in the typed OpenAPI contract even though the voice Route Handlers use plain `fetch`/`FormData`, not `openapi-fetch` (binary/multipart bodies aren't a good fit for that client).
+
+### Decisions / assumptions
+- **OpenAI Whisper API + OpenAI TTS, not self-hosted Whisper or ElevenLabs** — user's explicit choice. Self-hosted Whisper adds infra (model download, CPU/GPU) not worth it for single-user Phase 0; OpenAI TTS reuses the one API key already needed for STT instead of a second provider/account. Revisit provider choice in Phase 3.5 (multilingual tuning from real pilot usage) per the phase plan — this is a placeholder pick, not a locked-in architecture decision.
+- **Full voice loop (auto-submit + auto-play), not minimal (fill-box-only)** — user's explicit scope choice over the more conservative "record → fill box → still need Send click" option.
+- **Route Handlers, not Server Actions, for both voice endpoints** — Server Actions' default 1MB body cap and lack of streaming-binary-response ergonomics made them a worse fit than a plain Route Handler proxy; documented in `node_modules/next/dist/docs` per this repo's `AGENTS.md` (Next 16 conventions may differ from training data).
+- **No DB persistence for voice calls** — unlike text tasks (`tasks`/`usage_records`), STT/TTS calls aren't written to Postgres or counted against `budget_guard`. Phase 0.8 scope is "founder can talk to the chat instead of typing," not cost-tracking voice usage; revisit if voice becomes the primary interaction mode (would need a `usage_records`-style entry per call for real cost visibility).
+- Browser autoplay policies can block `<audio autoPlay>` without a fresh user gesture; kept `controls` on the element so the reply is always at least one click away rather than silently lost.
+
+### Manual tests run
+- `uv run pytest` (orbicrew-api) — 28 passed (up from 23; 5 new voice tests).
+- `npx tsc --noEmit`, `npm run lint`, `npm run build` (orbicrew-web) — all clean; build output confirms `ƒ /api/voice/speak` and `ƒ /api/voice/transcribe` routes.
+- Direct `curl` round-trip against the live API: `POST /v1/voice/speak {"text":"Hello from Orbicrew."}` → real MPEG audio (128kbps, confirmed via `file`) → fed that file into `POST /v1/voice/transcribe` → `{"text":"Hello from Orbicrew."}` (exact match).
+- End-to-end browser test via a temporary (not committed) Playwright script: launched Chromium with `--use-fake-device-for-media-stream --use-fake-ui-for-media-stream --use-file-for-fake-audio-capture=<synthesized WAV via macOS `say`+`afconvert`>`, granted mic permission, clicked Record → Stop on `http://localhost:3000`, confirmed the real Whisper transcript filled the textarea, the task auto-submitted and completed for real (`writing` specialist, `claude-haiku-4-5`, real haiku output), and the `<audio>` element received a populated `blob:` src from a real `tts-1` response. See manual test guide §0.D.
+
+### Next recommended work
+1. Phase 0.9: daily-use soak — 2-3 weeks of real personal use (text + voice) before starting Phase 1.
+2. If voice becomes a primary interaction path during the soak, reconsider persisting voice call cost/usage (currently untracked, see assumptions above).
+
+### Files / repos touched
+- `repos/orbicrew-api`: `src/orbicrew_api/voice.py`, `src/orbicrew_api/settings.py`, `src/orbicrew_api/main.py`, `tests/test_voice.py`, `pyproject.toml`, `uv.lock`, `.env.example`
+- `repos/orbicrew-web`: `src/app/chat-form.tsx`, `src/app/api/voice/transcribe/route.ts`, `src/app/api/voice/speak/route.ts`, `src/lib/api-schema.d.ts`
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md` (this entry)
+
+---
+
 ## 2026-08-07 — `orbicrew-admin` auth shell
 
 **Agent / operator:** Claude Code

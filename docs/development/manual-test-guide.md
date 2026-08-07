@@ -89,12 +89,14 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 | 0.C.2 | Specialist B happy path | Same | Pending |
 | 0.C.3 | Failure handling | Failed tool/model call surfaces clear status, no silent hang | Pending |
 
-### 0.D Voice (when implemented)
+### 0.D Voice
 
 | # | Check | Expected | Status |
 |---|---|---|---|
-| 0.D.1 | STT | Spoken input becomes correct-enough text in primary language | Pending |
-| 0.D.2 | TTS | Reply plays back | Pending |
+| 0.D.1 | STT | Spoken input becomes correct-enough text in primary language | Pass (2026-08-07) — Playwright + Chromium fake mic (`--use-fake-device-for-media-stream` + `--use-fake-ui-for-media-stream`) fed a real synthesized-speech WAV; `POST /v1/voice/transcribe` (OpenAI `whisper-1`) returned the correct text and filled the chat textarea |
+| 0.D.2 | Auto-submit after transcription | Recording stop transcribes then submits the task without a manual Send click | Pass (2026-08-07) — task auto-submitted via `formRef.requestSubmit()`, routed to the writing specialist, real `claude-haiku-4-5` output rendered |
+| 0.D.3 | TTS | Reply plays back | Pass (2026-08-07) — on task completion, `POST /v1/voice/speak` (OpenAI `tts-1`) returns real MP3 bytes; web auto-plays via a blob-URL `<audio autoPlay controls>` (controls stay visible as a manual-replay/autoplay-blocked fallback) |
+| 0.D.4 | Direct API round-trip | `POST /v1/voice/speak` → `POST /v1/voice/transcribe` on the resulting audio returns matching text | Pass (2026-08-07) — `curl` round-trip: "Hello from Orbicrew." → real MP3 → transcribed back to "Hello from Orbicrew." |
 
 ### 0.E Admin auth shell
 

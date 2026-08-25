@@ -6,6 +6,52 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-25 — Phase 2.5: Tenant settings admin (seats/roles + plan limits), live-verified end-to-end
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 2 — task 2.5.
+**Scope:** `repos/orbicrew-api`, `repos/orbicrew-web`; `docs/development/`.
+
+### Context
+Next Phase 2 slice picked at explicit user request ("next do the implementation of tenant settings"). 2.5's stated scope is three things — seats/roles, per-agent kill switches, plan limits. Checked the existing code first rather than assuming a blank slate: per-agent kill switches were **already real**, built as part of 1.4a's Agent Roster (`agents.status: active/disabled` + `PATCH /v1/agents/{id}` + a Deactivate/Activate button in `agent-config-tabs.tsx`) — so this slice's actual remaining scope was seats/roles (a real Team Members admin surface; `auth.py` had an explicit comment that no invite/join flow existed yet) and plan limits (nothing enforced `tenants.plan_tier` anywhere).
+
+### Done
+
+**`repos/orbicrew-api`:**
+- New `migrations/0009_tenant_settings.sql`: `users.role` (free-text since 0001, always `'owner'` in practice) gets a real `check (role in ('owner', 'admin', 'member'))` constraint.
+- `auth.py` gains `require_role(*roles)`, a dependency factory (`Depends(require_role("owner", "admin"))`) — a channel adapter's API-key auth always resolves to `role="owner"` (`_resolve_api_key`), so this never blocks adapters.
+- New `src/orbicrew_api/team.py` — `/v1/team` router: `GET /v1/team` (plan tier + seat/agent limits + member list); `POST /v1/team/members` (owner/admin invite by email+role, seat-limit-checked, returns a system-generated temporary password **once** in the response — no email/invite-link delivery exists, so the inviter relays it manually, same reveal-once shape as `POST /v1/api-keys`); `PATCH /v1/team/members/{id}` (owner-only role change, rejects targeting the owner or the caller's own row); `DELETE /v1/team/members/{id}` (owner/admin, rejects self, rejects targeting the owner, rejects an admin removing another admin, and catches `asyncpg.ForeignKeyViolationError` → 409 rather than crashing when the target has task history — `tasks.user_id` has no `ON DELETE`, and there's no soft-delete/deactivation column on `users` yet). `PLAN_CATALOG` (`starter`=3 seats/3 agents, `growth`=10/10, `scale`=unlimited) is a fixed Python dict keyed by the existing `tenants.plan_tier`, not a table — same reasoning as `agents.py`'s `TOOL_CATALOG`: a code-reviewed constant, since real per-tenant plan editing is Phase 2.2's (deferred) billing integration's job, not this slice's.
+- Wired `team_router` into `main.py`.
+- New `tests/test_team.py` (14 cases: plan-limit reporting, invite + temp password, seat-limit 403, duplicate-email 409, unlimited-plan skip, role-based 403s, self/owner/admin-removal guards, FK-violation → 409). 144 tests passing (was 130).
+
+**`repos/orbicrew-web`:**
+- Regenerated `src/lib/api-schema.d.ts` from the live API (running dev server auto-reloaded on the new router). New `src/lib/api-team.ts` (typed wrapper, `Result`-union pattern matching `api-byo-keys.ts`). Note: `InvitableRole` is defined locally as `"admin" | "member"` rather than derived from the generated `InviteMemberRequest["role"]` schema type — that field has a server-side default, so openapi-typescript marks it `| undefined`, which isn't the exhaustive two-value set the UI needs.
+- `/settings` (`page.tsx`) rebuilt with real `?tab=` query-param tab switching (Next's `searchParams` prop, same pattern `digest/page.tsx` already uses for its history range) — "Team Members" is now a second real, enabled tab alongside the pre-existing "API Keys" one; `Connected Channels`/`Plan & Billing`/`Interface Preference` stay disabled placeholders.
+- New `team-members-section.tsx` (server component: fetches `getTeam()` + `getSessionUser()`, shows "`N` of `limit` seats used on the `<plan>` plan", renders `MemberRow`s, shows `InviteMemberForm` only when the viewer is owner/admin and under the seat limit), `member-row.tsx` (client; role select + Save only when the viewer is owner and the target isn't the owner or self, Remove button gated to match every backend guard — self/owner never removable, admin can only remove members), `invite-member-form.tsx` (client; on success shows the temp password once in a callout, styled to match `add-byo-key-form.tsx`'s existing card).
+- `npx tsc --noEmit` and `npm run lint` both clean.
+- **Live-verified** against the real founder dev tenant + Postgres, both at the API layer (`curl` with real JWTs) and through the actual `orbicrew-web` UI (Playwright): invited a real member → got a real temporary password → that password logged the new user in for real; promoted them to admin via `PATCH`; invited two more up to the starter plan's 3-seat cap; a 4th invite got a real 403 naming the plan and limit; owner self-removal blocked (403); admin-removes-member allowed, admin-removes-admin blocked (403). Browser pass: invite form → temp password revealed in the UI → role change via the Save button → Remove — each step confirmed via a fresh page load reflecting real DB state. All test data cleaned up afterward (tenant restored to just the founder as sole owner).
+
+### Decisions / assumptions
+- No email/invite-link delivery infrastructure exists in this codebase yet, so "invite" means: create the user account immediately with a system-generated temp password, shown once for the inviter to relay manually. This mirrors the existing `POST /v1/api-keys` reveal-once pattern rather than inventing a new one, and avoids blocking this slice on standing up an email service.
+- Only `owner`/`admin`/`member` roles, and invites can only create `admin`/`member` (never `owner` — there's exactly one owner per tenant, set at signup, with no transfer flow built here).
+- Plan seat/agent limits are hardcoded in `team.py`, not a new table — matches the existing `TOOL_CATALOG`/`DEFAULT_ACTION_WHITELIST` precedent in `agents.py`, and defers "plan tiers as real tenant-editable data" to Phase 2.2's billing work where it actually belongs.
+- Removing a user with existing task history is blocked (409) rather than allowed to cascade or orphan rows — `tasks.user_id` isn't nullable and has no `ON DELETE`, and adding a soft-delete column felt like scope creep for a first pass at this feature.
+- Playwright's own click → navigation-wait heuristic hung on the Next.js server-action form submits for the role-change/remove buttons in this sandboxed headless-Chromium environment (the invite form's plain top-level submit didn't hit this). Confirmed via a parallel `curl` to the dev server during the hang that the app itself never stopped responding — worked around in the verification script with `dispatchEvent("click")` + a fresh page reload rather than relying on Playwright's own post-click wait. Not an app defect; noted here in case a future session hits the same thing.
+
+### Manual tests run
+See `manual-test-guide.md` row 2.6 for the full live-verification narrative (API + UI, both layers).
+
+### Next recommended work
+1. Phase 2.2 (usage records/tiers/billing UI, minus the deferred payment-processor wiring) or 2.7 (project isolation) — both real, un-started, and now unblocked by 2.1's tenant/auth model. 2.2's future usage-cap enforcement should read `byo_provider_keys.is_active` (2.3) to know which tenants are exempt, and could reuse this slice's `PLAN_CATALOG` shape for spend limits per tier.
+2. If real invite delivery becomes a priority, add an email-sending integration before this slice's "relay the password yourself" approach starts feeling out of place with real (non-technical) pilot customers.
+
+### Files / repos touched
+- `repos/orbicrew-api`: `migrations/0009_tenant_settings.sql`, `src/orbicrew_api/team.py`, `src/orbicrew_api/auth.py`, `src/orbicrew_api/main.py`, `tests/test_team.py`
+- `repos/orbicrew-web`: `src/lib/api-team.ts`, `src/lib/api-schema.d.ts`, `src/app/(dashboard)/settings/page.tsx`, `src/app/(dashboard)/settings/actions.ts`, `src/app/(dashboard)/settings/team-members-section.tsx`, `src/app/(dashboard)/settings/member-row.tsx`, `src/app/(dashboard)/settings/invite-member-form.tsx`
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md` (this entry)
+
+---
+
 ## 2026-08-25 — Phase 2.3: BYO provider key management, live-verified end-to-end
 
 **Agent / operator:** Claude Code

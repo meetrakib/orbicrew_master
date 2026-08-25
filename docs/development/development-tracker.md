@@ -6,6 +6,39 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-25 — Phase 1.7: Research Agent gets real web_search/web_fetch tools
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 (Overnight autonomy + multi-channel) — task 1.7
+**Scope:** `repos/orbicrew-api` only.
+
+### Context
+Session started with a "where we left off" check (bootstrap → phase plan → tracker). Git was clean across all repos (1.5 Telegram and 1.6 WhatsApp already committed/pushed from earlier today). Remaining Phase 1 work was 1.7 (Research agent + tools) and 1.8 (multi-provider routing); asked the user which to do next — picked 1.7.
+
+Mid-implementation (after a first pass wiring Tavily directly, tests passing), the user stopped and pushed back on the provider choice: "are you sure tavily is the way to go? cheapest but reliable options? paid APIs or open-source?" First research pass (from memory, not verified) named Tavily/Brave/SerpAPI/SearXNG with rough numbers — the user correctly called this out ("why are you missguiding me") since they'd already found different real numbers (Tavily PAYG $0.008/credit, Brave $5 free credit ≈1,000 credits, Firecrawl 1,000 free then $19/5,000 with no PAYG) and asked for the research to actually be done properly. Redid it with live `WebFetch`/`WebSearch` calls against Tavily's and Firecrawl's pricing pages and search results for Brave's current pricing (their pricing page 404'd) and SearXNG's self-hosting reliability. Confirmed: Brave dropped its flat 2,000/mo free tier in Feb 2026 for a $5/mo prepaid-credit model (now needs a card even for "free"); Firecrawl is really a scrape/crawl API, not a search API, and has no pay-as-you-go (a hard wall mid-task if a plan is exceeded); SearXNG has a real, GitHub-documented risk of Google rate-limiting/CAPTCHA-blocking a single self-hosted IP doing automated queries, with reliable results in practice needing a residential proxy — a bad trade against Orbicrew's own stated priority #2 ("reliability over flash"), especially for something meant to run unattended overnight.
+
+At current single-user scale, cost is a non-issue either way (Tavily's 1,000/mo and Brave's ~1,000–1,600/mo free credits both cover real usage indefinitely) — so the deciding factor was reliability/integration quality, not price, undercutting the original framing of "find the cheapest." User's final call: keep Tavily as the concrete provider for now, but build it behind a swappable abstraction (mirroring the Phase 1.8 model-provider registry's shape) so a different provider, or a user's own API key, or something Orbicrew builds/hosts itself later, is a new registry entry rather than a rewrite. User also floated a bigger future idea worth remembering: once Orbicrew has real customer volume, build/host their own LLM-search product (with proxy/IP infrastructure) and sell it the way Tavily/Brave/Firecrawl do — not scoped or built now, just a direction to keep in mind for Phase 3+.
+
+### Done
+- **`src/orbicrew_api/research_tools.py`** (new): Anthropic tool-use schemas (`RESEARCH_TOOLS`) for `web_search`/`web_fetch`; `web_fetch` fetches a URL and strips it to plain text with a small stdlib `HTMLParser` subclass (no new HTML-parsing dependency); `execute_tool(name, input) -> (content, summary, is_error)` dispatches either tool and — per the design docs' "external content is untrusted, tool failures shouldn't crash the task" principle — catches network/parsing failures and reports them to the model as an `is_error` tool result instead of raising, so the agent can retry with a different query/URL. Search sits behind a `SearchProvider` protocol + `TavilySearchProvider` + `get_search_provider()` (reads `TAVILY_API_KEY` from settings) — the abstraction the mid-session pushback asked for.
+- **`src/orbicrew_api/llm_client.py`**: `_get_client` renamed to public `get_client` (now used from two modules) and `_MAX_TOKENS` to public `MAX_TOKENS`; existing `complete()` unchanged in behavior. New `complete_research(model, input_text)` runs a tool-use conversation loop (Anthropic `tools=RESEARCH_TOOLS`, up to 6 turns) — executes each `tool_use` block via `research_tools.execute_tool`, feeds the result back as a `tool_result` message, and accumulates cost/input/output tokens **across every turn** (each turn is a separately billed API call, not just the final one). Returns `ResearchResult` (extends `CompletionResult` with `tool_calls: list[ToolCallRecord]`).
+- **`src/orbicrew_api/office_manager.py`**: `_make_specialist_node` branches — the `research` key calls `complete_research()` and turns each `ToolCallRecord` into its own `tool_call` task step (logged via the existing `task_steps.tool_call` jsonb column, which needed no schema change since `worker.py` already persists `TaskStep`s generically) ordered *before* the final `specialist_execute` step; every other specialist is untouched, still a single `complete()` call.
+- **Dependency**: `httpx` moved from the `dev` group to real `dependencies` in `pyproject.toml` (it was already present for ASGI test clients but not available to non-test code); `uv sync` run.
+- **Settings/docs**: `settings.py` gets `tavily_api_key`; `.env.example` and `README.md` document it and the new Phase 1.7 slice.
+- **Tests** (12 new, 66/66 passing across the suite): `test_research_tools.py` (search success/no-API-key/failure, fetch tag-stripping/truncation, `execute_tool` success/error paths for both tools, unknown-tool `ValueError`) using `httpx.MockTransport` — hit and fixed a real bug while writing these: patching `research_tools.httpx.AsyncClient` patches the actual shared `httpx` module (not a copy), so a naive mock factory that itself called `httpx.AsyncClient(...)` recursively re-triggered its own patch and blew up on a duplicate `transport` kwarg; fixed by capturing the real `httpx.AsyncClient` class at test-module import time, before any patching. `test_llm_client.py` (no-tool-use single turn, tool-use-then-final-answer with cross-turn cost/token accumulation, tool-error-marked-and-conversation-continues, max-turns cutoff). `test_office_manager.py` gains a research-path case asserting `tool_call` steps land before `specialist_execute` with the right `detail` shape.
+
+### Follow-ups
+- **Live verification pending** — needs a real `TAVILY_API_KEY` (user hasn't set one up yet); nothing else blocks it. Once set, run a real research task and confirm grounded output + real `tool_call` steps in the response (manual-test-guide row 1.8).
+- Only the `research` specialist has tools; coding/writing/general are unchanged (matches the phase task's scope — no code-execution tool was requested or built).
+- Future business idea from this session's discussion, not scoped/built: once there's real customer volume, Orbicrew could build/host its own LLM-oriented search product (with its own proxy/IP infra) and sell it the way Tavily/Brave/Firecrawl do. Revisit at Phase 3+ scale, not before.
+- Remaining Phase 1 item: 1.8 (multi-provider cost-tier routing — DeepInfra + OpenRouter registry).
+
+### Files / repos touched
+- `repos/orbicrew-api`: new `src/orbicrew_api/research_tools.py`, new `tests/test_research_tools.py`, new `tests/test_llm_client.py`; modified `src/orbicrew_api/llm_client.py`, `src/orbicrew_api/office_manager.py`, `src/orbicrew_api/settings.py`, `pyproject.toml`, `uv.lock`, `.env.example`, `README.md`, `tests/test_office_manager.py`
+- `docs/development/`: `phase_by_phase_development_plan.md` (1.7 row), `manual-test-guide.md` (new 1.8 row — see that row's note on numbering drift from the plan file), `development-tracker.md` (this entry)
+
+---
+
 ## 2026-08-25 — Phase 1.6: WhatsApp adapter built, blocked on Meta business verification
 
 **Agent / operator:** Claude Code

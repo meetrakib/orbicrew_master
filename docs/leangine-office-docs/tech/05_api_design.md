@@ -203,7 +203,7 @@ Connecting to `/v1/ws/tasks/:task_id` streams events as the task moves through i
 
 This is what powers both Orbit View's live status badges, orbit-ring delegation animation, and desk activity (per `18_orbit_view_game_ui.md` Section 4) and the standard GUI's task progress view — same event stream, different rendering. Orbit View's idle-time wandering/amenity behavior (`18_orbit_view_game_ui.md` Section 5) is deliberately **not** driven by this stream — it's ephemeral, client-side simulation with no backend involvement, per that document's Section 10.2 — only task-related state (queued/running/done/failed, cost) flows over this connection.
 
-For the tenant-wide feed (`/v1/ws/tenant/:tenant_id/feed`), all task events across all of a tenant's agents are multiplexed onto one connection — used for the activity/audit dashboard and for the "morning summary" aggregation.
+For the tenant-wide feed (`/v1/ws/tenant/:tenant_id/feed`), all task events across all of a tenant's agents are multiplexed onto one connection — used for the activity/audit dashboard and for the Digest aggregation (`03_system_design.md` §7).
 
 ---
 

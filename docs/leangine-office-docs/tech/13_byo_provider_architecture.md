@@ -20,6 +20,16 @@ These three cases have genuinely different validation, routing, and error-handli
 
 ---
 
+## 0. Phased rollout (added 2026-08-25, updated 2026-08-25) — this document describes the Phase 2+ target architecture; Phase 0/1 runs a lighter first increment of the same idea
+
+Everything below describes the full self-hosted-gateway architecture for when there are real BYO/multi-tenant customers to serve — a separate LiteLLM *server* process, per-tenant virtual keys, and enforced multi-tenant budgets. **Phase 0/1 (single-tenant personal use) does not stand up that server.** Instead, `model_router.py`/`llm_client.py` implement a small **in-app provider registry** (Phase 1.8, `phase_by_phase_development_plan.md`) — the same conceptual shape as Patterns A/B/C below (multiple provider backends behind one router, chosen automatically by cost or pinned manually), just running as code inside the existing FastAPI service instead of a separate proxy. It starts with **DeepInfra** and **OpenRouter** as registered providers (both already give one account/one bill across the models Phase 0/1 needs — DeepSeek-class for cheap tiers, Claude for frontier) and is designed to grow by adding registry entries — **AWS Bedrock, a direct Anthropic key, a direct OpenAI key** — without an architecture change, matching this document's Pattern A (direct key) and Pattern B (OpenRouter) shapes one tenant early.
+
+**Why not the full gateway yet:** the multi-tenant virtual-key, per-tenant budget-cap, and cross-BYO-pattern enforcement described below don't apply with one tenant — running a separate LiteLLM instance now would be infrastructure to operate for no benefit over the in-app registry.
+
+**Self-hosted LiteLLM is introduced at Phase 2.3** (`phase_by_phase_development_plan.md`), when Pattern A/B/C BYO routing and per-tenant enforcement in Section 2 below become real requirements. Because Phase 1.8's provider registry already mirrors this document's shape, that migration is an upgrade of an existing pattern (swap the in-app registry for LiteLLM's proxy, keep the same provider concepts), not a rewrite. Until Phase 2.3, treat this document as the design to build *toward* for multi-tenancy specifically — single-tenant provider flexibility already exists via Phase 1.8.
+
+---
+
 ## 2. The fix: adopt a self-hosted LLM gateway as the abstraction layer
 
 Rather than hand-building three separate integration paths, the right move is to put a **self-hosted, open-source LLM gateway** between your orchestration backend and every model call — for both managed and BYO tenants. **LiteLLM** is the concrete recommendation: <cite index="117-1">it's open source, puts your full AI stack behind one OpenAI-compatible key, tracks and caps spend, routes to the right model, and self-hosts anywhere — even air-gapped — supporting 140+ providers and over a thousand models.</cite> Critically, <cite index="120-1">the proxy exposes budgets and rate limits per virtual key/user with built-in access control, and</cite> <cite name="118-1">it's a self-hosted OpenAI-compatible gateway that any existing OpenAI-format client can call with zero code changes.</cite>

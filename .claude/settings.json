@@ -1,7 +1,9 @@
 {
   "permissions": {
+    "ask": [
+      "Read(./local/**)"
+    ],
     "deny": [
-      "Read(./local/**)",
       "Edit(./local/**)",
       "Write(./local/**)"
     ]

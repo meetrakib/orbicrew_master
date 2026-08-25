@@ -12,8 +12,8 @@ This is the onboarding note for the Orbicrew development workspace (Cursor + Cla
 
 - Office Manager orchestrates specialist “employee” agents
 - Interfaces: Standard Dashboard (default early), Orbit View (later differentiator), Telegram/Discord/WhatsApp
-- Cost-first architecture: model router + budget guard + self-hosted LiteLLM
-- Overnight autonomy with approval gates and morning summaries
+- Cost-first architecture: model router + budget guard, calling models through a small in-app provider registry (DeepInfra + OpenRouter to start, extensible to Bedrock/direct-Anthropic/direct-OpenAI — auto-cheapest by default, per-agent manual override); self-hosted LiteLLM (a separate gateway server) is deferred until Phase 2's multi-tenant/BYO routing actually needs it — see `phase_by_phase_development_plan.md` Phase 1.8 and `docs/leangine-office-docs/tech/13_byo_provider_architecture.md`
+- Unattended autonomy with approval gates and a Digest ("since last checked," any time of day)
 - End state: multi-tenant SaaS (Managed + BYO-API)
 - Admin surfaces: tenant settings in `orbicrew-web`; platform operator console in dedicated `orbicrew-admin`
 
@@ -69,6 +69,14 @@ orbicrew_development/          ← personal GitHub (master workspace)
 | `resources/orbicrew_dev_infra/` | Shared local deps: Postgres+pgvector, Redis |
 
 Stitch folders: `orbicrew` (DESIGN), `orbicrew_agent_configuration`, `orbicrew_agent_roster`, `orbicrew_approvals_inbox`, `orbicrew_dashboard_overview`, `orbicrew_hire_ai_employees`, `orbicrew_message_agents`, `orbicrew_settings`, `orbicrew_task_detail`, `orbicrew_usage_billing`.
+
+`resources/stitch_orbicrew_ui_ux_guide/additional-designs/` — later Stitch exports covering gaps in the
+original set (briefs in the sibling `additional_designs_guide/` folder): `orbicrew_agent_configuration_setting_tab`
+(Agent Configuration's undesigned Setting tab), `orbicrew_agent_roster_master_promotion_modal`
+(promote/demote Master Agent modal, adds to `orbicrew_agent_roster`), `orbicrew_live_voice_mode`
+(continuous voice overlay, extends `orbicrew_message_agents`), `orbicrew_settings` (updated —
+adds a Slack row to Connected Channels), `shader` (WebGL background shader, no `screen.png`), plus
+a duplicate `orbicrew` DESIGN.md (identical to the original — same tokens).
 
 ### Local infra convention
 

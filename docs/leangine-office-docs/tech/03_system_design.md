@@ -204,9 +204,11 @@ flowchart TD
 
 ---
 
-## 7. Overnight autonomous execution flow
+## 7. Unattended autonomous execution flow
 
-Directly implements the "hand off a project, sleep, wake up to a summary" requirement.
+Directly implements the "hand off a project, walk away, check back to a Digest" requirement. Overnight is the flagship scenario (and the one dramatized in marketing), but the mechanism itself is not time-of-day-scoped — a task assigned and finished the same afternoon produces a Digest exactly the same way, which matters for a global, multi-timezone user base.
+
+**Digest mechanism:** purely on-demand, no background scheduler. The default view is a live query — "everything since I last checked" — computed from a per-tenant `last_digest_viewed_at` watermark (advanced by an explicit "mark as reviewed" action, never implicitly by a background poll) to now, falling back to a 24h lookback on first-ever view. History works the same way: passing an explicit `period_start`/`period_end` runs the identical aggregation over an arbitrary past range without touching the watermark — since every task and approval is already persisted forever, there is nothing to pre-generate, cache, or run a cron job for. A custom per-user delivery time is deliberately **not** built yet: it would require a background job with nowhere to deliver to, since no email/Telegram/Slack channel exists — that pairing (schedule + real delivery) is deferred to land together once a channel adapter exists (Phase 1.5+). Timestamps are stored and computed in UTC throughout the backend/DB and converted to the viewer's local timezone only at display time.
 
 ```mermaid
 sequenceDiagram
@@ -226,15 +228,15 @@ sequenceDiagram
         Agent->>BG: Check budget before each model call
         BG-->>Agent: OK / Pause
         alt Action outside whitelist
-            Agent->>DB: Flag for morning approval
+            Agent->>DB: Flag for approval
         else Action allowed
             Agent->>Agent: Execute (sandboxed)
         end
     end
     Agent->>OM: Report final status
-    OM->>DB: Compile consolidated summary
-    Note over User: User wakes up
-    OM->>User: Morning summary (done / blocked / needs decision)
+    OM->>DB: Compile consolidated Digest
+    Note over User: User checks back in (any time — this diagram's "overnight" is one instance, not a requirement)
+    OM->>User: Digest (done / blocked / needs decision)
 ```
 
 ---

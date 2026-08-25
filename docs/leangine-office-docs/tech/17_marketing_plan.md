@@ -36,7 +36,7 @@ This is the beachhead, in every English-speaking market simultaneously — not a
 | Hiring risk | No hiring, firing, training, or trust-building cycle | An agent roster you configure once, use immediately |
 | Can't trust delegation | Every action traceable, approval gates on anything risky | An audit trail — "what did my AI employee actually do today" |
 | Tool sprawl | One place tasks live and get done | Fewer tabs open |
-| No visibility | Real-time status + morning summary for overnight work | Wake up to a report, not a surprise |
+| No visibility | Real-time status + a Digest of what happened while you were away | Check back to a report, not a surprise |
 
 ### 1.2 Secondary segment: small marketing/dev/creative agencies (2-15 people)
 
@@ -58,7 +58,7 @@ This is ranked by expected acquisition efficiency for segment 1.1/1.2, not by ch
 |---|---|---|
 | **X / Twitter** | The default place solo builders, indie hackers, and agency owners talk shop, share wins/losses publicly, and follow AI-tool news | Build-in-public presence; short demo clips of real tasks completing with real cost shown; reply/engage in AI-agent and indie-hacker conversation threads, not just broadcast |
 | **LinkedIn** | Where the agency-owner and small-team segment (1.2 especially) actually networks and evaluates B2B tools | Founder-voice posts (not corporate-brand-voice) about specific before/after workflows; case-study style posts once pilot customers exist |
-| **YouTube (long-form + Shorts)** | Freelancers/agency owners heavily consume "how I run my business" and tool-review content | Real screen-recorded demos — task assignment → overnight run → morning summary — this is a visual product, use that; seed reviews/mentions with creators in the "solopreneur/agency ops" niche rather than generic "AI tools" niche |
+| **YouTube (long-form + Shorts)** | Freelancers/agency owners heavily consume "how I run my business" and tool-review content | Real screen-recorded demos — task assignment → overnight run → Digest — this is a visual product, use that; seed reviews/mentions with creators in the "solopreneur/agency ops" niche rather than generic "AI tools" niche |
 | **Product Hunt** | Standard launch amplifier for this exact buyer type, high-intent traffic on launch day | A well-prepared launch (not a rushed one) once there's a working Phase 1 product and at least a few real testimonials |
 | **Indie Hackers / relevant subreddits (r/freelance, r/agency, r/SaaS, r/artificial)** | Long-form discussion, high trust in peer recommendations, low tolerance for obvious self-promotion | Participate genuinely in threads about the actual pain points (overwork, client delivery, tool fatigue) before ever mentioning the product; when relevant, mention it as one option, not a pitch |
 | **Cold outreach to warm-adjacent lists** | Founder's own network — other freelancers/agency owners is the single fastest, highest-trust first-customer channel | Direct outreach (see Section 4) to people the founder already has some connection to or credibility with — the classic first-10-customers playbook |
@@ -81,7 +81,7 @@ This leads with the differentiator that actually matters to this buyer: not "AI 
 
 1. **"Hire, don't prompt."** The mental model is a roster of employees with roles, not a single chat window you have to re-explain context to every time.
 2. **"See exactly what it cost and what it did."** Cost-per-task and a real audit trail, every time — directly answers the trust and cost-anxiety pain points that generic "AI agent" competitors leave vague.
-3. **"Work happens while you sleep."** Overnight autonomous execution with a morning summary — the single most visceral, shareable demo moment (screen-record: assign a task at 11pm, show the finished output at 7am).
+3. **"Work happens while you sleep."** Overnight autonomous execution with a Digest waiting for you — the single most visceral, shareable demo moment (screen-record: assign a task at 11pm, show the finished output at 7am). The underlying feature isn't actually morning-scoped (a global product can't assume everyone's "morning"), but this remains the flagship demo scenario.
 
 ### 3.3 What NOT to lead with
 

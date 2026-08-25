@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Orbicrew - Live Voice Mode</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&amp;family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config injected by developer prompt rules -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#f7f1ff",
+                        "secondary": "#7f5700",
+                        "inverse-on-surface": "#f4eeff",
+                        "on-tertiary-container": "#ffc69a",
+                        "primary-fixed": "#e3dfff",
+                        "on-surface": "#1c1639",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb77d",
+                        "on-primary-fixed": "#140067",
+                        "inverse-primary": "#c5c0ff",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#fdf8ff",
+                        "secondary-fixed-dim": "#f6bd5e",
+                        "on-primary-fixed-variant": "#3f35a3",
+                        "surface-container-high": "#ece4ff",
+                        "background": "#fdf8ff",
+                        "on-tertiary-fixed": "#2f1500",
+                        "surface-container": "#f1ebff",
+                        "outline": "#787584",
+                        "inverse-surface": "#312b4f",
+                        "tertiary-container": "#8a4900",
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#c5c0ff",
+                        "surface-container-lowest": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#604100",
+                        "on-secondary-container": "#775100",
+                        "surface": "#fdf8ff",
+                        "outline-variant": "#c8c4d5",
+                        "surface-variant": "#e6deff",
+                        "surface-container-highest": "#e6deff",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#3b309e",
+                        "on-surface-variant": "#474553",
+                        "surface-tint": "#584fbc",
+                        "secondary-fixed": "#ffdeae",
+                        "primary-container": "#534ab7",
+                        "tertiary": "#683500",
+                        "on-background": "#1c1639",
+                        "on-primary-container": "#d1ccff",
+                        "surface-dim": "#ddd5ff",
+                        "on-secondary-fixed": "#281900",
+                        "on-tertiary-fixed-variant": "#6e3900",
+                        "tertiary-fixed": "#ffdcc3",
+                        "on-error": "#ffffff",
+                        "secondary-container": "#ffc566"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "stack-md": "24px",
+                        "gutter": "24px",
+                        "margin-mobile": "20px",
+                        "container-max": "1280px",
+                        "margin-desktop": "40px",
+                        "stack-lg": "48px",
+                        "stack-sm": "12px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Bricolage Grotesque"],
+                        "headline-sm": ["Bricolage Grotesque"],
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-md": ["Bricolage Grotesque"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "display-lg-mobile": ["Bricolage Grotesque"],
+                        "label-sm": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["56px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "1", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Pulse Animation for Live Badge */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        .pulse-dot::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; right: 0; bottom: 0;
+            border-radius: 50%;
+            background-color: currentColor;
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface h-screen w-screen overflow-hidden flex flex-col items-center justify-between font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Area: Agent Status -->
+<header class="w-full flex justify-between items-center px-margin-desktop py-stack-md z-10 relative bg-gradient-to-b from-surface to-transparent pt-8">
+<!-- Brand/Context Back -->
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors group">
+<span class="material-symbols-outlined group-hover:-translate-x-1 transition-transform" data-icon="arrow_back">arrow_back</span>
+<span class="font-label-md text-label-md hidden md:block">Back to Workspace</span>
+</button>
+<!-- Active Agent Pill -->
+<div class="flex items-center gap-3 bg-surface-container-low border border-outline-variant rounded-full py-2 px-4 shadow-sm">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-headline-sm text-sm overflow-hidden border border-outline-variant">
+<!-- Using O for Orion -->
+                O
+            </div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Orion Core</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Lead Strategist</span>
+</div>
+<div class="flex items-center gap-1.5 ml-2 pl-3 border-l border-outline-variant">
+<div class="relative w-2 h-2 text-error">
+<div class="absolute inset-0 rounded-full bg-error"></div>
+<div class="pulse-dot text-error"></div>
+</div>
+<span class="font-label-md text-label-md text-error tracking-widest uppercase text-[10px]">Live</span>
+</div>
+</div>
+<!-- Right actions (empty for balance or secondary actions) -->
+<div class="w-24 flex justify-end">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Center Stage: Visualizer & Status -->
+<main class="flex-1 w-full flex flex-col items-center justify-center relative z-0 mt-[-40px]">
+<!-- WebGL Visualizer Wrapper -->
+<div class="relative w-72 h-72 md:w-96 md:h-96 rounded-full flex items-center justify-center mb-8">
+<!-- Glow background effect -->
+<div class="absolute inset-0 rounded-full bg-primary-container/20 blur-3xl scale-125 pointer-events-none"></div>
+<!-- The Shader Component -->
+<div class="w-full h-full rounded-full overflow-hidden shadow-inner relative z-10 border border-outline-variant/30 bg-surface-container-lowest">
+<!-- STITCH_SHADER_START:ANIMATION_45 class="absolute inset-0 w-full h-full object-cover" -->
+<div class="absolute inset-0 w-full h-full object-cover" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_45" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_45');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+varying vec2 v_texCoord;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+
+// Simulates an audio-reactive pulsing orb for Orbicrew Voice Mode
+void main() {
+    vec2 uv = v_texCoord - 0.5;
+    uv.x *= u_resolution.x / u_resolution.y;
+    
+    float dist = length(uv);
+    
+    // Base pulse logic
+    float pulse = 0.8 + 0.2 * sin(u_time * 2.5);
+    float radius = 0.2 * pulse;
+    
+    // Waveform-like disturbance based on time
+    float noise = 0.05 * sin(u_time * 10.0 + uv.x * 20.0) * sin(u_time * 5.0 + uv.y * 15.0);
+    radius += noise;
+
+    // Glowing core (Deep Violet: #534ab7 -> vec3(0.325, 0.29, 0.718))
+    vec3 color = vec3(0.325, 0.29, 0.718);
+    
+    // Outer glow (Gold accent: #e0a94c -> vec3(0.878, 0.663, 0.298))
+    vec3 accent = vec3(0.878, 0.663, 0.298);
+    
+    float glow = 0.01 / abs(dist - radius);
+    float core = smoothstep(radius, 0.0, dist);
+    
+    vec3 finalColor = color * core + accent * glow * 0.3;
+    
+    // Edge softening
+    float alpha = smoothstep(0.4, 0.1, dist);
+    
+    gl_FragColor = vec4(finalColor * alpha, alpha);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_45 -->
+</div>
+</div>
+<!-- Status & Captions -->
+<div class="flex flex-col items-center max-w-2xl text-center px-gutter space-y-4">
+<h2 class="font-headline-md text-headline-md text-primary tracking-tight">Speaking...</h2>
+<!-- Live Captions Area -->
+<div class="h-24 flex items-center justify-center overflow-hidden relative">
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed max-w-xl animate-pulse">
+                    "I've initialized the data gathering process for the 'Minimalist Premium' trend in SaaS. I am now synthesizing this information..."
+                </p>
+<!-- Subtle fade for text overflow -->
+<div class="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-surface to-transparent pointer-events-none"></div>
+</div>
+</div>
+</main>
+<!-- Control Bar -->
+<footer class="w-full pb-stack-lg pt-stack-md px-margin-desktop flex flex-col items-center justify-center z-10 bg-gradient-to-t from-surface-container-low via-surface to-transparent">
+<div class="flex items-center gap-4 bg-surface border border-outline-variant rounded-full p-2 shadow-sm">
+<!-- Switch to Text Mode / Chat -->
+<button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all group" title="Exit to Chat">
+<span class="material-symbols-outlined text-[24px] group-hover:scale-110 transition-transform" data-icon="chat">chat</span>
+</button>
+<div class="w-px h-8 bg-outline-variant mx-2"></div>
+<!-- Mute Mic -->
+<button class="w-14 h-14 rounded-full flex items-center justify-center bg-surface-container-high text-on-surface hover:bg-outline-variant transition-all group border border-outline-variant" title="Mute Microphone">
+<span class="material-symbols-outlined text-[28px] group-hover:scale-110 transition-transform" data-icon="mic">mic</span>
+</button>
+<!-- End Session -->
+<button class="w-14 h-14 rounded-full flex items-center justify-center bg-error text-on-error hover:bg-on-error-container transition-all group shadow-md" title="End Session">
+<span class="material-symbols-outlined text-[28px] group-hover:scale-110 transition-transform" data-icon="call_end">call_end</span>
+</button>
+<div class="w-px h-8 bg-outline-variant mx-2"></div>
+<!-- Settings / Device Options -->
+<button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all group" title="Audio Settings">
+<span class="material-symbols-outlined text-[24px] group-hover:scale-110 transition-transform" data-icon="graphic_eq">graphic_eq</span>
+</button>
+</div>
+<p class="font-label-sm text-label-sm text-outline mt-6">Powered by Orbicrew Voice Intelligence</p>
+</footer>
+</body></html>

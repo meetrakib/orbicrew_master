@@ -6,6 +6,450 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-25 — Follow-up: Task 1.8 widened from OpenRouter-only to a multi-provider in-app registry (DeepInfra + OpenRouter, extensible to Bedrock/direct keys)
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 — plan/docs only, revises task 1.8 from the entry immediately below (same day); no application code touched
+**Scope:** `docs/development/phase_by_phase_development_plan.md`, `docs/development/AGENT_BOOTSTRAP.md`, `docs/leangine-office-docs/01_AI_Office_Platform_Requirements.md`, `docs/leangine-office-docs/tech/13_byo_provider_architecture.md`.
+
+### Context
+Two things surfaced after the OpenRouter-direct decision below was recorded: (1) the user found that DeepInfra now lists Claude on its pricing page — verified live at deepinfra.com/pricing: Claude Sonnet 5 at $2/$10 per M tokens, *cheaper* than Anthropic's own $3/$15 list price, with no aggregator markup or card-funding fee since DeepInfra owns its inference stack; DeepSeek V3.2 there runs a few cents higher than OpenRouter's, close enough not to matter. DeepInfra doesn't list MiniMax, but that's not a gap — the router only needs one good cheap-tier model. (2) The user then asked, correctly, why this has to be either/or: "can't we have both options, use whatever we need," extensible later to Bedrock and direct platform keys, user-choosable. That reframed task 1.8 from "pick one provider" to "build the provider-agnostic registry `tech/13_byo_provider_architecture.md` already designs for BYO/multi-tenant — just as in-app code for one tenant now, instead of a separately-hosted LiteLLM server." Important distinction worth keeping straight for future sessions: **self-hosting** (a separate gateway process to run/monitor — still not being done) is a different axis from **multi-provider support** (application code that calls different `base_url`s — genuinely free to have regardless of the self-hosting decision).
+
+### Done
+- `phase_by_phase_development_plan.md`: task 1.8 rewritten from "OpenRouter-backed cost-tier routing" to **"Multi-provider cost-tier routing"** — an in-app provider registry starting with DeepInfra + OpenRouter, auto-cheapest-per-tier with fallback, per-agent manual override reusing the `agents.model_mode`/`manual_model` columns from 1.4a (made provider-qualified), explicitly designed to add Bedrock/direct-Anthropic/direct-OpenAI as new registry entries without an architecture change. Phase 0 stack description and the "suggested immediate next slice" list updated to match.
+- `tech/13_byo_provider_architecture.md`: §0 rewritten to frame Phase 1.8's registry as a lighter first increment of *this same document's* Pattern A/B/C shape (not a separate, throwaway approach) — so Phase 2.3's eventual self-hosted-LiteLLM migration is an upgrade of the existing registry pattern, not a rewrite.
+- `01_AI_Office_Platform_Requirements.md`: Layer 4 row, the §7.2 LiteLLM bullet, and the §11.2 tooling table all updated — DeepInfra added as a registered provider (with the verified pricing rationale), OpenRouter kept for catalog breadth/fallback, AWS Bedrock added as a documented-but-not-yet-registered future candidate (real option, priced higher on open models, worth reconsidering only if AWS consolidation or heavy Claude volume changes the calculus).
+- `AGENT_BOOTSTRAP.md`: cost-architecture line updated to describe the registry instead of a single provider.
+- No `manual-test-guide.md` change — still no code touched.
+
+### Follow-ups
+- Task 1.8 implementation itself is still **Pending** — needs both a DeepInfra key and an OpenRouter key in `.env` before work starts.
+- AWS Bedrock and direct Anthropic/OpenAI keys are documented as registry-ready but not registered — add them opportunistically if a real need shows up (AWS infra consolidation, wanting Bedrock's non-marked-up Claude pricing at higher frontier-tier volume), not preemptively.
+
+### Files / repos touched
+- `docs/development/phase_by_phase_development_plan.md`, `docs/development/AGENT_BOOTSTRAP.md`, `docs/development/development-tracker.md` (this entry)
+- `docs/leangine-office-docs/01_AI_Office_Platform_Requirements.md`, `docs/leangine-office-docs/tech/13_byo_provider_architecture.md`
+
+---
+
+## 2026-08-25 — Decision: OpenRouter-direct cost routing now, self-hosted LiteLLM deferred to Phase 2; SaaS scope explicitly kept, not paused
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 (Overnight autonomy + multi-channel) — plan/docs only, adds task 1.8; no application code touched this session
+**Scope:** `docs/development/phase_by_phase_development_plan.md`, `docs/development/AGENT_BOOTSTRAP.md`, `docs/leangine-office-docs/01_AI_Office_Platform_Requirements.md`, `docs/leangine-office-docs/tech/13_byo_provider_architecture.md`.
+
+### Context
+User's actual day-to-day motivation surfaced this session, distinct from the sellable-SaaS framing the rest of the docs are written around: cut personal AI-subscription cost, consolidate everything (coding, research, content, ideation, product-dev thinking) into one place, and do it fast without rebuilding what already works. A wide-ranging discussion (cheap/open-source LLM options, inference API aggregators vs. self-hosting, and a specific Contabo CPU-only VPS someone floated) landed on a concrete, bounded decision rather than a re-architecture:
+
+- **Wire real cost-tier routing via OpenRouter, directly — not self-hosted LiteLLM, not yet.** Investigating the live code confirmed `model_router.py`'s own comment already flagged this as deferred work: every tier today (`trivial`/`cheap`/`mid`/`frontier`) calls Anthropic directly (`llm_client.py`), meaning Orbicrew's own cost-routing design has never actually been in effect — every task submitted through `/tasks` so far paid full Anthropic pricing regardless of complexity. `01_AI_Office_Platform_Requirements.md` §12's original Phase 0 spec already called for "OpenRouter-based model routing" — the implementation just never got there. This session's task 1.8 (below) closes that gap; it's a course-correction back to the original plan, not a new idea.
+- **Self-hosted LiteLLM is a real Phase 2.3 thing, not a Phase 0/1 thing.** `tech/13_byo_provider_architecture.md`'s gateway design (per-tenant virtual keys, three BYO patterns, budget enforcement as a second layer) only pays for the infrastructure-to-run cost once there are actual multiple tenants/BYO customers. At single-tenant personal-use volume, OpenRouter alone already delivers the same "one account, one bill, every model behind one key" property LiteLLM would provide, with zero server to operate. Added a phased-rollout note (§0) to that document so a future agent doesn't read it and assume the gateway is already running.
+- **Self-hosting the LLMs themselves was separately evaluated and rejected for now** — a Contabo "Cloud VPS 18" (18 vCPU/96GB RAM/€39/mo) the user was considering is CPU-only (no GPU line item on that plan); CPU inference of anything in the 30B–70B quality range realistically runs ~1–5 tok/s, unusable for an agentic tool-calling loop, and self-hosting only beats *cheap* open-weight API pricing (DeepSeek/MiniMax-class, ~$0.14–0.50/M tokens via OpenRouter) at roughly 50M+ tokens/day — enterprise volume, not personal use. Not recorded as a standing decision in any doc (no doc claimed self-hosted inference was planned for this stage), just noting it here so the reasoning isn't lost if it comes up again.
+- **Explicit user instruction: do not park/deprioritize the SaaS-only scope** (multi-tenancy, billing tiers, admin console, BYO-API key UI, marketplace, brand/marketing, Orbit View) — Phase 2/3 stand as already documented, untouched this session. The personal-use-first framing changes near-term sequencing (1.8 pulled ahead of 1.5–1.7 below) and the routing backend choice, not the long-run product scope.
+- **Coding-agent work stays external, deliberately.** Orbicrew's own "coding" specialist (`llm_client.py`) is a single system-prompted LLM call with no file/tool access — not comparable to opencode/Claude Code, which the user already uses for real repo-level work. Decision: keep using those tools separately, pointed at the same OpenRouter key once 1.8 lands, rather than trying to rebuild a repo-aware coding agent inside Orbicrew. Recorded in the 1.8 task description so it doesn't get reinvented later.
+
+### Done
+- `phase_by_phase_development_plan.md`: Phase 0 "Primary stack" bullet updated to say OpenRouter-direct with LiteLLM explicitly deferred and why. New **task 1.8 — OpenRouter-backed cost-tier routing** (`llm_client.py`/`model_router.py`/`settings.py` swap Anthropic-direct for OpenRouter's OpenAI-compatible endpoint; trivial/cheap/mid → a DeepSeek V3.2/MiniMax M2.5-class model, frontier → Claude, one key). "Suggested immediate next engineering slice" reordered: 1.8 sequenced ahead of 1.5 (Telegram)/1.6 (WhatsApp)/1.7 (research agent) at explicit user request — direct cost impact on real daily usage outweighs another channel or agent right now.
+- `AGENT_BOOTSTRAP.md`: "what you are working on" cost-architecture line updated (OpenRouter now, self-hosted LiteLLM from Phase 2, pointer to 1.8).
+- `01_AI_Office_Platform_Requirements.md`: §3.1 Layer 4 row, §7.2's LiteLLM bullet, and §11.2's LiteLLM/OpenRouter tooling rows all updated to describe the phased approach (OpenRouter direct now, LiteLLM as the Phase 2.3 target) instead of implying LiteLLM is the current state.
+- `tech/13_byo_provider_architecture.md`: new §0 "Phased rollout" note up front — the whole document is the Phase 2+ target design, not what's running; points to `model_router.py` + Phase 1.8 for the actual current/near-term path.
+- No `manual-test-guide.md` change — no code touched, no test steps changed this session.
+
+### Follow-ups
+- Task 1.8 itself (the actual `llm_client.py`/`settings.py`/`model_router.py` code change) is still **Pending** — needs the user's OpenRouter API key in `.env` before implementation starts; not done this session by explicit instruction ("not coding").
+- When 1.8 lands, opencode/Claude Code should be pointed at the same OpenRouter key (external tooling change, outside this repo — not a tracked Orbicrew task, just noted so the "one place" goal isn't forgotten).
+- Phase 2.3's BYO key management task is where self-hosted LiteLLM actually gets stood up — no change needed to that row, it already says "LiteLLM virtual/tenant routing."
+
+### Files / repos touched
+- `docs/development/phase_by_phase_development_plan.md`, `docs/development/AGENT_BOOTSTRAP.md`, `docs/development/development-tracker.md` (this entry)
+- `docs/leangine-office-docs/01_AI_Office_Platform_Requirements.md`, `docs/leangine-office-docs/tech/13_byo_provider_architecture.md`
+
+---
+
+## 2026-08-07 — Correction: reverted Digest's scheduled-generation cron job + snapshot storage
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 (Overnight autonomy + multi-channel) — corrects the 1.4c work from the immediately-preceding entry below, same day
+**Scope:** `orbicrew-api` (remove cron job, schedule endpoints, snapshot table) + `orbicrew-web` (remove schedule UI, replace snapshot-based history with a live date-range picker) + docs.
+
+### Context
+User pushback, verbatim: "why the fuck we need scheduler? it will burn cpu... isn't it simply just a db query? can't we manage in that way?" — correct, and the prior entry's design was wrong. The `generate_scheduled_digests` hourly `arq` cron job scanned `tenants` forever for a feature that delivered nothing (no email/Telegram/Slack channel exists to push a generated digest to), and the `digest_snapshots` table existed only to give that scheduler something to write. Meanwhile "history" never needed either of those — `tasks`/`approvals` rows already persist forever, so browsing an arbitrary past period is just the `build_digest(pool, tenant_id, period_start, period_end)` helper (already built for the on-demand route) called with an older range. A schedule preference with zero functional effect is also exactly the "fabricated affordance" this codebase explicitly avoids elsewhere (see the 1.4a Agent Roster entry's "Generate with AI" omission). Reverted rather than kept-but-unused.
+
+### Done
+- **`orbicrew-api`**: removed `generate_scheduled_digests` and its `cron_jobs` registration from `worker.py` (back to just `run_task_job`, no background scheduler beyond the existing task queue). Removed `GET/PUT /v1/dashboard/digest/schedule` and `GET /v1/dashboard/digest/history` plus the `DigestSchedule`/`DigestSnapshot` models from `digest.py` — kept `GET /v1/dashboard/digest` (default + explicit `period_start`/`period_end`) and `POST .../viewed` exactly as before. Deleted `orbicrew_api/timezones.py` (no longer needed with the schedule feature gone). Rewrote `migrations/0006_digest_rename_and_schedule.sql` in place to only do the rename (safe — uncommitted, local-only, never applied anywhere but this dev DB) instead of adding a throwaway `0007_undo` migration; manually reconciled the local dev DB (dropped `digest_snapshots` and the two schedule columns) to match.
+- **`orbicrew-web`**: deleted `schedule-form.tsx` and `history-list.tsx`. New `history-range-picker.tsx` — four preset buttons (Today/Yesterday/Last 7 days/Last 30 days), computed client-side from the browser's local clock via plain `Date` arithmetic, `.toISOString()`'d into the existing `period_start`/`period_end` query params — no new endpoint, no stored state. `api-digest.ts` trimmed back to `getDigest`/`markDigestViewed` only. `page.tsx` no longer fetches schedule/history in parallel; just the one `getDigest` call plus the picker component when not already viewing a historical range.
+- **Tests**: removed the 3 `generate_scheduled_digests` cases from `test_worker.py` and the 5 schedule/history cases from `test_digest.py`; kept the explicit-range test (renamed its docstring to spell out that this *is* the history mechanism). 53/53 backend tests passing (down from 62, correctly — no coverage lost, coverage removed for removed code).
+- **Verified live**: restarted `orbicrew-api`, confirmed the OpenAPI spec now lists only `/v1/dashboard/digest` and `/v1/dashboard/digest/viewed`; regenerated `api-schema.d.ts`; `npx tsc --noEmit`, `npm run lint`, `npm run build` all clean; started the dev server and confirmed `/digest` renders the four history preset buttons and no schedule form, and that clicking through to an explicit range still shows "back to current."
+
+### Follow-ups
+- Same as before: a real custom delivery time + scheduler is legitimate once a delivery channel (Telegram, Phase 1.5+) exists to actually push something — build the schedule preference and the job that acts on it together, at that point, not separately.
+- `phase_by_phase_development_plan.md`'s 1.4c row and `manual-test-guide.md`'s 1.4c row (added in the immediately-preceding session) were removed rather than marked failed, since the underlying code no longer exists — the 1.4 rows in both were updated in place to note that history *is* the explicit-range query, no separate mechanism.
+
+### Files / repos touched
+- `repos/orbicrew-api`: `migrations/0006_digest_rename_and_schedule.sql`, `src/orbicrew_api/digest.py`, `src/orbicrew_api/worker.py`, `tests/test_digest.py`, `tests/test_worker.py`; deleted `src/orbicrew_api/timezones.py`
+- `repos/orbicrew-web`: `src/lib/api-digest.ts`, `src/app/digest/page.tsx`, `src/app/digest/actions.ts`, new `src/app/digest/history-range-picker.tsx`; deleted `src/app/digest/schedule-form.tsx`, `src/app/digest/history-list.tsx`
+- `docs/leangine-office-docs/`: `01_AI_Office_Platform_Requirements.md`, `tech/03_system_design.md`, `tech/07_phased_development_plan.md`
+- `docs/development/`: `phase_by_phase_development_plan.md`, `manual-test-guide.md`, `development-tracker.md` (this entry)
+
+---
+
+## 2026-08-07 — Phase 1.4/1.4c: "Morning summary" renamed to Digest + custom schedule + history
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 (Overnight autonomy + multi-channel) — reworks 1.4, adds 1.4c
+**Scope:** `orbicrew-api` (rename + new migration + new endpoints + cron job) + `orbicrew-web` (route rename + new schedule/history UI) + product docs.
+
+### Context
+User pushback on the Phase 1.4 "morning summary" naming: the feature isn't actually time-of-day-scoped (same-day tasks finish outside "morning" too), "morning" is undefined for a global multi-timezone user base, and a fixed daily-cron framing doesn't fit a product where users can check in whenever they want. Worked through the redesign with the user before touching code: (1) rename to **Digest** (locked as a single word for the sidebar nav label), (2) default view stays "since I last checked" (already the watermark-based design from the original 1.4 slice), (3) add an *optional* per-user custom local delivery hour/timezone on top of that default, (4) keep history of past digests, browsable, (5) explicit standing rule going forward: backend/DB/API always UTC, frontend always renders in the viewer's local timezone (`Date.toLocaleString()` already did this correctly, confirmed rather than changed). All confirmed as no-AI-cost, DB-only work before implementation started.
+
+### Done
+- **Migration `0006_digest_rename_and_schedule.sql`**: renames `tenants.last_summary_viewed_at` → `last_digest_viewed_at`; adds `tenants.digest_schedule_hour_local` (0–23, checked) + `digest_schedule_timezone` (IANA name, validated via `zoneinfo` at the API layer); adds `digest_snapshots` table (tenant_id, period_start/end, generated_at, jsonb payload) for persisted history.
+- **`orbicrew-api`**: `morning_summary.py` → `digest.py`. Router prefix moved to `/v1/dashboard/digest`; models renamed (`DigestResponse`/`DigestTask`/`DigestViewed`, new `DigestSchedule`/`DigestSnapshot`). Live aggregation logic extracted into a shared `build_digest(pool, tenant_id, period_start, period_end)` so the on-demand route and the new scheduled job never diverge. `GET /v1/dashboard/digest` now accepts optional `period_start`/`period_end` to browse an arbitrary historical range live (400 if only one side is given) without ever touching the watermark — the default (no params) path is unchanged "since last viewed, or 24h lookback on first view." New `GET/PUT /v1/dashboard/digest/schedule` (set/clear hour+timezone together, 400 on an unknown IANA zone or one-sided input) and `GET /v1/dashboard/digest/history`. New `orbicrew_api/timezones.py` (`validate_iana_timezone`, `local_hour`) shared between the route and the worker.
+- **`orbicrew-api` worker**: new `generate_scheduled_digests` hourly `arq` cron job (`WorkerSettings.cron_jobs`) — for each tenant with a schedule set, checks whether `now` matches their configured local hour (via `zoneinfo`), and if so (and not already generated within the current UTC hour, to survive worker restarts), computes a digest via the shared `build_digest` helper, persists it to `digest_snapshots`, and advances the watermark. This is generation + storage only — **no email/Telegram/Slack delivery channel exists yet** to push it anywhere; the point was to make "custom time" and "history" real and testable now rather than half-build a preference with no effect, using only infrastructure (arq, already-running worker, Postgres) that already exists.
+- **`orbicrew-web`**: `api-summary.ts` → `api-digest.ts`; `/summary` → `/digest` (`page.tsx`, `actions.ts`, `mark-viewed-button.tsx` renamed/updated). New `schedule-form.tsx` (hour + timezone picker, timezone `<datalist>` from `Intl.supportedValuesOf("timeZone")` with the browser's own zone as the default, "Turn on"/"Save"/"Turn off" states) and `history-list.tsx` (past snapshots, each linking back into the page as an explicit `period_start`/`period_end` view). The page accepts `searchParams` (`Promise<{period_start?, period_end?}>` per this Next.js version's async-params convention) to switch between "live since last checked" and "browsing history" modes — history mode hides the mark-viewed button and schedule form and shows a "back to current" link. Sidebar nav label/href updated to `Digest`/`/digest`.
+- **Tests**: `test_morning_summary.py` → `test_digest.py` (renamed cases plus new coverage for explicit-range browsing, one-sided-range rejection, schedule get/set/clear, invalid-timezone rejection, history listing). `test_worker.py` gained three cases for `generate_scheduled_digests` (fires at the tenant's local hour, skips outside it, skips a tenant already generated this hour). 62/62 backend tests passing.
+- **Verified live**: ran the new migration against the real local Postgres; started `orbicrew-api` and hit all four digest endpoints via `curl` (including a rejected bad timezone and a watermark-preserving explicit-range query); directly invoked `generate_scheduled_digests` against the real DB with a tenant's schedule set to the current hour and confirmed a real `digest_snapshots` row landed and then appeared via `GET .../history`; regenerated `api-schema.d.ts` from the live OpenAPI spec; `npx tsc --noEmit`, `npm run lint`, `npm run build` all clean; started the Next dev server and confirmed `/digest` renders (schedule form, history section, mark-as-reviewed), the old `/summary` route now 404s, other pages (`/agents`, `/tasks`, `/approvals`) are unaffected, and that browsing an explicit historical range renders UTC-stored timestamps converted to the server's local time (confirming the UTC-backend/local-frontend display convention holds without any code change, since `toLocaleString()` already did this).
+- **Docs**: renamed "morning summary" → Digest throughout `01_AI_Office_Platform_Requirements.md`, `03_system_design.md` (§7 retitled "Unattended autonomous execution flow" with a new paragraph documenting the watermark/schedule/history mechanism), `05_api_design.md`, `07_phased_development_plan.md`, `10_ui_ux_guide.md`, `17_marketing_plan.md` (kept the "wake up to a report" narrative in marketing copy — that's intentional messaging, not a technical claim — but renamed the product term), `AGENT_BOOTSTRAP.md`. `phase_by_phase_development_plan.md` 1.4 row updated in place (renamed, not a log) with a new 1.4c row for the schedule/history addition; `manual-test-guide.md` 1.4 row updated in place plus a new 1.4c row, changelog appended (old Pass entry for "Morning summary" left untouched, per that file's own append-only changelog convention).
+
+### Follow-ups
+- No delivery channel wired for the custom schedule yet — Telegram (Phase 1.5) is the first candidate; when it lands, `generate_scheduled_digests` is the natural place to also push the snapshot instead of only persisting it.
+- Schedule/watermark are still tenant-level (`DEFAULT_TENANT_ID`), consistent with the rest of Phase 0/1's single-tenant scaffolding — becomes per-user once real auth/multi-user lands (Phase 2), at which point `last_digest_viewed_at`/`digest_schedule_*` likely move from `tenants` to `users`.
+- The `[[feedback-timezone-display]]` UTC-backend/local-frontend convention is now a standing rule for all future timestamp work, not just Digest — recorded in memory.
+
+### Files / repos touched
+- `repos/orbicrew-api`: `migrations/0006_digest_rename_and_schedule.sql` (new), `src/orbicrew_api/digest.py` (new, replaces `morning_summary.py`), `src/orbicrew_api/timezones.py` (new), `src/orbicrew_api/worker.py`, `src/orbicrew_api/main.py`, `tests/test_digest.py` (new, replaces `test_morning_summary.py`), `tests/test_worker.py`
+- `repos/orbicrew-web`: `src/lib/api-digest.ts` (new, replaces `api-summary.ts`), `src/app/digest/` (new: `page.tsx`, `actions.ts`, `mark-viewed-button.tsx`, `schedule-form.tsx`, `history-list.tsx`; replaces `src/app/summary/`), `src/components/sidebar-nav.tsx`
+- `docs/leangine-office-docs/`: `01_AI_Office_Platform_Requirements.md`, `tech/03_system_design.md`, `tech/05_api_design.md`, `tech/07_phased_development_plan.md`, `tech/10_ui_ux_guide.md`, `tech/17_marketing_plan.md`, `tech/15_performance_training_and_settings.md`
+- `docs/development/`: `AGENT_BOOTSTRAP.md`, `phase_by_phase_development_plan.md`, `manual-test-guide.md`, `development-tracker.md` (this entry)
+
+---
+
+## 2026-08-07 — Additional Stitch design references added
+
+**Agent / operator:** Claude Code
+**Phase:** n/a (docs/resources only, no code)
+**Scope:** `resources/stitch_orbicrew_ui_ux_guide/` (master-only) + `docs/development/AGENT_BOOTSTRAP.md` + `resources/README.md`.
+
+User dropped a new `resources/stitch_orbicrew_ui_ux_guide/additional-designs/` folder (with briefs
+in a sibling `additional_designs_guide/`) covering gaps the original Stitch set didn't design:
+`orbicrew_agent_configuration_setting_tab` (the previously-undesigned Setting tab), the
+`orbicrew_agent_roster_master_promotion_modal`, `orbicrew_live_voice_mode` (extends
+`orbicrew_message_agents`), an **updated** `orbicrew_settings` (adds a Slack Connected-Channels
+row), a `shader` background effect, and a duplicate (identical) `orbicrew` DESIGN.md. The first
+three map directly to the two "planning-doc update still pending" items flagged in the 1.4a entry
+below (Slack-as-channel-adapter, live voice mode) plus the Master-promotion UI that entry
+implemented without a visual spec at the time. Recorded the new folder set in
+`docs/development/AGENT_BOOTSTRAP.md` and `resources/README.md` (same places the original Stitch
+folder list lives) and in memory ([[feedback-stitch-design-references]]) so future sessions know
+to check `additional-designs/` alongside the original folders before building/restyling the
+affected pages. No app code touched this session.
+
+---
+
+## 2026-08-07 — Agent Roster + Configuration UI, pulled forward from Phase 2.4; Tasks page header parity
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 (Overnight autonomy + multi-channel) — task 1.4a/1.4b, pulling Phase 2.4 (Agent CRUD UI) forward at explicit user request.
+**Scope:** `orbicrew-api` (new agents endpoints + migration) + `orbicrew-web` (`/agents`, `/agents/new`, `/agents/[id]`, `/tasks` header).
+
+### Context
+User compared the app against the Stitch design references (`resources/stitch_orbicrew_ui_ux_guide/orbicrew_agent_roster`, `orbicrew_agent_configuration`, `orbicrew_message_agents`) and asked for the real Agents page and a closer Tasks-page match. Investigating first: the `agents` table has existed since `0001_core_schema.sql` but was completely unused — `office_manager.py` routes purely on keyword-classified `specialist` strings, no API/UI ever read or wrote an `agents` row. Building a pixel-matching Agents page with fabricated card data would have violated the project's no-fabricated-content convention (`docs/development/development-tracker.md`'s 1.3a entry), so the real blocker — and the actual scope of this slice — was building the Agent CRUD backend that Phase 2.4 already called for, just earlier than sequenced. Confirmed with the user before writing any migration (schema changes are harder to reverse) via three scoped decisions: (1) Slack should become a chat-channel adapter like Telegram/Discord, not just a Phase 3.3 tool integration — **not yet implemented, planning-doc update still pending**; (2) any agent should be promotable to Master Agent, not just a fixed default — **implemented this session**; (3) live/continuous voice mode should be available on the plain chat GUI, not only the Phase 3 Orbit View avatar — **not yet implemented, planning-doc update still pending**.
+
+### Done
+- **Migration `0005_agent_master_and_setting.sql`**: adds `agents.is_master`, `tone_notes`, `model_mode` (`'auto'|'manual'`), `manual_model`, plus a partial unique index (`idx_agents_one_master_per_tenant`) enforcing exactly one Master Agent per tenant at the DB level, not just in application code.
+- **`orbicrew-api`**: new `src/orbicrew_api/agents.py` — `GET/POST /v1/agents`, `GET/PATCH /v1/agents/{id}`, `POST /v1/agents/{id}/promote` (transactional demote-then-promote), `GET/POST /v1/agents/{id}/memories` + `DELETE .../{memory_id}` (using the pre-existing but previously-unused `agent_memory` table). A tenant's first-ever agent auto-becomes Master (there's no one else to delegate to). `bootstrap.py` now seeds a default "Office Manager" Master agent alongside the existing default tenant/user, so the roster isn't empty on first load. Router wired into `main.py`. Deliberately **not** wired into `office_manager.py`'s actual task routing/execution — that's separate follow-up work; this slice is the CRUD/data model + UI only, and the Agents page copy doesn't claim otherwise.
+- **`orbicrew-web`**: new `src/lib/api-agents.ts` client (same result-wrapper pattern as `api-approvals.ts`); new `/agents` (roster grid — Master card with accent border, other agent cards with an Edit/Make-Master/Disable menu, dashed "Create Agent" card; deliberately omits the mockup's "Generate with AI" card since that flow isn't built, per the no-fabricated-affordances convention), `/agents/new` (manual create form), `/agents/[id]` (Soul/Skills/Memory/Setting tabs per `10_ui_ux_guide.md` §13b — Setting tab is new: Auto/Manual model mode, per-task budget cap, Master Agent promote/status control, and the action-whitelist toggles, all previously undesigned even in the Stitch mockup). Sidebar's "Agents" link and "Hire New Agent" button are no longer disabled placeholders.
+- **`/tasks` header parity**: page title now shows the active task's input text (truncated) plus a status badge ("Active Task"/"Completed"/"Paused"/"Failed"), matching `orbicrew_message_agents`'s per-task title bar, instead of a static "Tasks" heading.
+- **Verified live**: ran `orbicrew-api-migrate`, started both `orbicrew-api` and `orbicrew-web` dev servers against the real local Postgres/Redis, and drove the full flow with Playwright — create agent → redirect to its config page → check a Skill → save → reload → still checked → add a Memory entry → back on the roster, promote it to Master via the card menu → Master badge moved and the previous Master's card returned to normal → zero console errors throughout. Submitted a real task from `/tasks` and confirmed the new header/badge render correctly. Test agents/memories/tasks created during verification were cleaned up; the seeded "Office Manager" was restored as Master.
+
+### Follow-ups
+- The Slack-as-channel-adapter and live-voice-everywhere decisions above are recorded here but **not yet reflected** in `01_AI_Office_Platform_Requirements.md`, `03_system_design.md`, `10_ui_ux_guide.md`, or the phase plan's Phase 3 rows — do that pass before Phase 3 planning starts, so the docs stay authoritative.
+- Agent rows are not yet wired into actual task routing (`office_manager.py` still classifies by keyword, ignoring `tasks.agent_id`/the `agents` table's `system_prompt`/`tool_whitelist`/`model_mode`) — the Agents page today manages configuration, it doesn't yet change what happens when a task runs. That wiring is real follow-up work, not a bug.
+- Skills tab tool catalog (`web_search`, `code_execution`, `image_generation`, `file_access`, `browser_automation`, `email_send`) is a placeholder list in both `agents.py` (backend) and `agent-config-tabs.tsx` (frontend) — grows as real tool integrations land per `14_universal_task_coverage.md`; the two lists are manually kept in sync today, not a single source of truth.
+- No AI-generate-agent flow (the mockup's "Generate with AI" card) — manual creation only.
+
+---
+
+## 2026-08-07 — Phase 1.4: Morning summary
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 (Overnight autonomy + multi-channel) — task 1.4
+**Scope:** `orbicrew-api` (one new endpoint pair + migration) + `orbicrew-web` (new `/summary` page).
+
+### Done
+- **Watermark**: new migration `0004_morning_summary.sql` adds `tenants.last_summary_viewed_at`
+  (nullable — null means "never viewed"). No per-tenant preferences table existed to hang this off;
+  chose `tenants` over `users` since the summary is a tenant-level concept in this still-single-user
+  scaffolding.
+- **`orbicrew-api`**: new `src/orbicrew_api/morning_summary.py` — `GET /v1/dashboard/morning-summary`
+  splits `tasks` with `status in ('done','paused','failed')` and `completed_at >= period_start` into
+  three lists (all three statuses set `completed_at` on the same `worker.py` update, confirmed before
+  relying on it), sums their spend, and lists `approvals` with `requested_at >= period_start`
+  regardless of resolution status (reuses `approvals.ApprovalResponse`/`_to_response` rather than a
+  duplicate model). `period_start` is the watermark, or `now() - 24h` on first-ever view (so a new
+  tenant doesn't get a report spanning all of history). `POST /v1/dashboard/morning-summary/viewed`
+  is a **separate** explicit action that advances the watermark — deliberately not auto-triggered by
+  the `GET`, so page polling/reloads can't silently clear it before a human has actually seen it.
+  New `tests/test_morning_summary.py` (split-by-status, spend sum, no-watermark fallback, empty
+  state, mark-viewed).
+- **`orbicrew-web`**: new `src/lib/api-summary.ts` wrapper (same shape as `api-dashboard.ts`); new
+  `/summary` page mirroring `/approvals`'s server-component structure — stat row (completed/paused/
+  failed counts + total spend), three task-list sections, and a "New Approvals" section that reuses
+  the existing `ApprovalItem` component for still-pending rows and a plain read-only row for
+  already-resolved ones (rendering `ApprovalItem` for a resolved approval would offer a dead
+  Approve/Reject that 409s). "Mark as reviewed" is a `useActionState`/`useFormStatus` form
+  (`src/app/summary/actions.ts` + `mark-viewed-button.tsx`) copied from `approval-item.tsx`'s
+  resolve-button pattern. Added `{ href: "/summary", label: "Morning Summary", icon: "summarize" }`
+  to `sidebar-nav.tsx`, right after Home.
+- **Verified live** (both dev servers were already running from prior sessions, real accumulated
+  task/approval history): `curl` against `GET /v1/dashboard/morning-summary` returned real
+  split-by-status data (37 done, 4 paused, 2 failed tasks; 4 approvals, 2 approved/2 rejected); the
+  SSR'd `/summary` HTML contained the expected task text and approval badges; `POST .../viewed`
+  advanced the watermark and a follow-up `GET` + page reload correctly showed all four sections
+  empty. No browser/screenshot tool was available this session, so visual confirmation was via
+  fetching the rendered HTML rather than a real browser — worth a Playwright pass before calling the
+  UI fully done.
+
+### Follow-ups
+- No Stitch mockup exists for this page (`resources/stitch_orbicrew_ui_ux_guide/` has no
+  morning-summary folder) — styling was extrapolated from `/approvals`'s card language rather than a
+  reference design.
+- 1.5 Telegram adapter is the next pending Phase 1 slice per the phase plan.
+
+---
+
+## 2026-08-07 — Phase 1.3a follow-up: theming, global header, real dashboard, task chat page
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 (Overnight autonomy + multi-channel) — completing task 1.3a
+**Scope:** `orbicrew-web` (theming, layout, dashboard, new `/tasks` page) + `orbicrew-api` (one new
+read-only aggregate endpoint). Same-day follow-up to the 1.3a entry below, after the user reviewed
+the first pass live and asked for the remaining pieces (logos, dark/light/system mode, a real
+global header, sidebar polish, and moving chat into a proper message-thread page).
+
+### Done
+- **Brand token correction**: `docs/leangine-office-docs/tech/09_brand_identity.md` §6.3 (the
+  brand doc CLAUDE.md calls locked) turned out to have slightly different hex values — and real
+  dark-mode values — than the Stitch mockups' own `DESIGN.md`/embedded Tailwind config that 1.3a's
+  token set was copied from (Stitch's is a Material-3-style approximation it generated for its own
+  exports, light-mode only). Reconciled `globals.css`: locked hexes now anchor
+  `background/surface/on-surface/on-surface-variant/primary/secondary(gold)/error/success/warning/
+  outline` in both themes; the extra M3 tonal container/outline scale is hand-derived from those
+  anchors (same relative steps Stitch used) since the locked doc doesn't define that finer scale.
+  Saved as [[reference-brand-token-source]] memory for future sessions.
+- **Dark mode**: `@custom-variant dark (&:where(.dark, .dark *));` (Tailwind v4's class-based dark
+  mode escape hatch) + a `.dark` override block in `globals.css`. New `src/components/theme-toggle.tsx`
+  — cycles **dark → light → system** (dark is default), icon reflects current state
+  (`dark_mode`/`light_mode`/`computer` — user asked for a literal desktop icon for "system", not
+  the auto-brightness glyph), persisted to `localStorage`. A blocking inline script in
+  `layout.tsx`'s `<head>` applies the class before hydration to avoid a flash of the wrong theme;
+  `<html>` needs `suppressHydrationWarning` for this (React otherwise correctly flags a real
+  server/client class attribute mismatch — the standard `next-themes`-style fix, confirmed via a
+  Playwright console-error check before and after).
+- **Logos/icons**: copied `resources/logos/*.svg` into `orbicrew-web/public/`. Caught and fixed a
+  naming-direction bug before shipping — `dark-*.svg` is a dark-**colored** mark (goes on light
+  backgrounds), `light-*.svg` is light-colored (goes on dark backgrounds), the opposite of my first
+  (wrong) assumption; renamed the copied files to `orbicrew-{wordmark,icon}-for-{light,dark}-bg.svg`
+  so the mapping can't be misread again, and saved [[feedback-logo-icon-naming]] to memory. Sidebar
+  now shows the real wordmark (theme-swapped via `dark:hidden`/`dark:block`, no JS needed). Favicon
+  is theme-aware via two `<link rel="icon" media="(prefers-color-scheme: ...)">` tags (Next's
+  single-file `icon.svg` convention doesn't support that), with a static fallback for browsers that
+  ignore the `media` attribute.
+- **Global header**: was mobile-only (`md:hidden`) in 1.3a; now always rendered
+  (`src/components/app-shell.tsx`), holding a disabled notification bell (no backend), the theme
+  toggle, and a new `src/components/user-menu.tsx` — click the account avatar for a dropdown
+  showing the seeded Phase-0 user's real email (`founder@orbicrew.local`, matches `bootstrap.py`,
+  not fabricated) and a disabled "Log out" (nothing real to end yet — no session exists in
+  `orbicrew-web`, unlike `orbicrew-admin`'s real cookie auth). Notification/theme-toggle/avatar are
+  all fixed `h-8 w-8` boxes so hover states render as true circles and all three sit on the same
+  baseline (both were visual bugs the user caught: an oval hover shape and slight vertical
+  misalignment, both fixed by the same change). Footer trimmed back down to just the copyright line
+  — the API-health status this same session had briefly added there was removed per feedback: this
+  is now purely a global layout element, not a status surface, and `src/lib/api-status.ts` (now
+  unreferenced anywhere) was deleted rather than left as dead code.
+- **Sidebar**: active nav item now gets a real background fill (`bg-surface-container`) in addition
+  to the border/bold/color treatment 1.3a already had — every Stitch mockup shows this and 1.3a
+  missed it.
+- **Real Overview dashboard** (`src/app/page.tsx`, per `orbicrew_dashboard_overview`): new
+  `GET /v1/dashboard/summary` (`src/orbicrew_api/dashboard.py`) returns `active_tasks` (live count
+  of `queued`/`running`), `spend_today_usd`/`daily_cap_usd` (reuses the existing rolling-24h query,
+  extracted out of `worker.py` into a shared `src/orbicrew_api/usage.py::get_tenant_spend_24h` so
+  both call sites share one query instead of two copies), and `recent_tasks` (last 5, lightweight,
+  no `task_steps` join). The page renders three real stat cards, a real "Live Activity" feed from
+  `recent_tasks`, and a real "Needs Attention" panel — reusing `ApprovalItem` directly against
+  `listApprovals("pending")` rather than adding a redundant pending-count field to the new endpoint.
+  Deliberately **not** ported from the mockup: the fictional "Agents Status busy/idle" stat (no
+  live "Agent" entity exists — the `agents` table is schema-only, confirmed via a full grep of
+  `orbicrew-api`, nothing reads or writes it) and "Monthly Spend" (no monthly cap exists to show a
+  real progress bar against; "Spend today" against the real rolling-24h `tenant_daily_cap_usd` was
+  used instead, since that's the one real enforced number this system has).
+- **New `/tasks` page** (per `orbicrew_message_agents` — that mockup's own sidebar copy shows
+  "Tasks" as the active tab, confirming it's the destination for the sidebar's existing "Tasks" nav
+  item, not a new concept): `chat-form.tsx` moved from `src/app/` to `src/app/tasks/` (same for its
+  `actions.ts`) with all submit/poll/record/TTS logic untouched — only the render output changed,
+  from a card+`<dl>` to a message-bubble thread (user bubble → three-dot typing indicator while
+  queued/running → specialist agent bubble with a real initial-letter avatar, real output/model/
+  cost once done, or an inline warning/error card for paused/failed instead of a fake agent reply).
+  No multi-turn/history was added — the backend is still one `input_text` → one `output` per task,
+  so this is one exchange per page load, not a persisted conversation.
+- Saved four memories for future sessions (see `MEMORY.md`):
+  [[feedback-logo-icon-naming]], [[feedback-stitch-design-references]] (the
+  folder-per-page-purpose convention, explicitly requested), [[reference-brand-token-source]],
+  [[feedback-global-layout-and-unbuilt-features]] (global `AppShell` + the "show unbuilt features
+  disabled, never omit or fake" pattern used throughout this session).
+
+### Manual tests run
+- `uv run pytest` (orbicrew-api) — 47 passed (2 new `test_dashboard.py` cases).
+- `npx tsc --noEmit`, `npm run lint`, `npm run build` (orbicrew-web) — all clean.
+- Playwright against the live dev server: dark-mode screenshots of `/`, `/tasks`, `/approvals` at
+  1440px; theme cycled dark→light→system via real header clicks with light-mode screenshots
+  re-captured; a dedicated console-error check confirmed the hydration-mismatch warning was real
+  (present before the `suppressHydrationWarning` fix, gone after); zoomed header screenshots
+  confirmed the notification/theme-toggle/avatar circles are now equal-sized and aligned, and the
+  theme-toggle hover state is a true circle, not an oval.
+- Live end-to-end round trip: started `resources/orbicrew_dev_infra` deps (already up) plus a
+  temporary `arq` worker (not left running afterward — stopped at the end of this check) since none
+  was active; submitted a task from `/tasks`, confirmed via `curl` the task reached `status: "done"`
+  with real `claude-haiku-4-5` output and `$0.0002` spend, then re-screenshotted the page to confirm
+  the same real output rendered correctly in the agent bubble with the right specialist label/model/
+  cost.
+- Dashboard stat cards cross-checked against the same live data (4 active/recent tasks visible,
+  `$0.30 / $20.00` spend bar, `0` pending approvals matching the empty Approvals inbox).
+
+### Next recommended work
+1. Phase 1.4 — morning summary: consolidated overnight report; `AppShell`/`SidebarNav` and the
+   dashboard's `recent_tasks`/approvals patterns are ready to extend for this.
+2. When Agents/Tasks/Billing/Settings pages actually ship (per their matching
+   `resources/stitch_orbicrew_ui_ux_guide/` folders), flip the relevant `sidebar-nav.tsx`
+   `NAV_ITEMS` entry from label-only to a real `href`.
+3. When real auth/tenancy lands (Phase 2), wire `user-menu.tsx`'s "Log out" for real and replace
+   the seeded placeholder email with the actual signed-in user's.
+
+### Files / repos touched
+- `repos/orbicrew-web`: `src/app/globals.css`, `src/app/layout.tsx`, `src/app/page.tsx`,
+  `src/app/tasks/` (new: `page.tsx`, `chat-form.tsx`, `actions.ts`; moved out of `src/app/`),
+  `src/app/approvals/actions.ts`, `src/components/app-shell.tsx`, `src/components/sidebar-nav.tsx`,
+  `src/components/theme-toggle.tsx` (new), `src/components/user-menu.tsx` (new),
+  `src/lib/api-dashboard.ts` (new), `src/lib/api-schema.d.ts`, `src/lib/api-status.ts` (deleted,
+  unreferenced), `src/app/actions.ts` / `src/app/chat-form.tsx` / `src/app/favicon.ico` (deleted,
+  moved/replaced), `public/orbicrew-{wordmark,icon}-for-{light,dark}-bg.svg` (new)
+- `repos/orbicrew-api`: `src/orbicrew_api/dashboard.py` (new), `src/orbicrew_api/usage.py` (new),
+  `src/orbicrew_api/worker.py`, `src/orbicrew_api/main.py`, `tests/test_dashboard.py` (new)
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`,
+  `docs/development/development-tracker.md` (this entry)
+- Master memory: `MEMORY.md` + 4 new memory files (see Done above)
+
+---
+
+## 2026-08-07 — Phase 1.3a: Web UI design parity with Stitch
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 (Overnight autonomy + multi-channel) — task 1.3a
+**Scope:** `orbicrew-web` only — restyle `/` and `/approvals` to the Stitch design language and land
+a reusable sidebar/shell primitive. No behavior changes: chat submit/poll/voice and approvals
+list/approve/reject are untouched, only markup/classNames and a new shared shell wrapping them.
+
+### Done
+- Two scope calls confirmed with the user via `AskUserQuestion` before implementation (see plan
+  file this session wrote and the user approved): sidebar shows all six Stitch nav items
+  (Home/Agents/Tasks/Approvals/Billing/Settings) + "Hire New Agent", but items with no real page
+  yet render **disabled** (muted `<span>`, no `href`) rather than being omitted; top header chrome
+  with no backing functionality yet (search, notifications, avatar) is **omitted** rather than
+  shipped as non-functional decoration.
+- `src/app/globals.css`: replaced the old ~10-token placeholder palette with the full
+  `resources/stitch_orbicrew_ui_ux_guide/orbicrew/DESIGN.md` Material-3-style token set (`surface`,
+  `surface-container-lowest/low/…/highest`, `on-surface`, `on-surface-variant`, `outline(-variant)`,
+  `primary(-container)`, `secondary(-container)`, `error(-container)`, plus `on-*` pairs) exposed
+  through Tailwind v4's existing `@theme inline` block — same mechanism, more tokens. Also added
+  DESIGN.md's 8px spacing scale (`base`/`gutter`/`margin-mobile`/`margin-desktop`/`stack-sm/md/lg`)
+  and radius scale (`sm` 0.25rem / `DEFAULT` 0.5rem / `md` 0.75rem / `lg` 1rem / `xl` 1.5rem) as
+  theme tokens, using Tailwind v4's actual key names confirmed by reading its own `theme.css`
+  (`--radius` for the unnamed `rounded` utility, not `--radius-DEFAULT`; `max-w-*` reads from
+  `--container-*`, which would have collided with the built-in `max-w-max` utility if named
+  carelessly — used an arbitrary `max-w-[1280px]` value instead of a new theme key there). Old
+  simplified aliases (`bg-bg-primary`, `text-text-secondary`, `accent-primary`, `border-border`,
+  etc.) were dropped outright, not shimmed — every call site was being rewritten in this same
+  slice, so no backwards-compat alias was needed; confirmed via grep that no stale references
+  remained anywhere in `src/`.
+- New `src/components/sidebar-nav.tsx` (`"use client"`, `usePathname()`-driven active state) and
+  `src/components/app-shell.tsx`, mounted once in root `src/app/layout.tsx` wrapping `{children}` —
+  every current route wants the shell and there's no auth/onboarding route in this app yet (unlike
+  `orbicrew-admin`'s `(operator)` route-group split), so a route-group split would be speculative;
+  revisit if a shell-less route is ever actually needed. Disabled nav items and the "Hire New
+  Agent" button use `aria-disabled`/`disabled` + a `title="Coming soon"` rather than dead links.
+- `src/app/layout.tsx`: added a `<link>` for Material Symbols Outlined (Google Fonts CSS API, same
+  URL the Stitch exports use) — not routed through `next/font/google` like the two text fonts,
+  since Material Symbols is a variable icon font (FILL/wght/GRAD/opsz axes via
+  `font-variation-settings`) that doesn't fit `next/font`'s static-subsetting model. This trips
+  `@next/next/no-page-custom-font` (a Pages Router-era lint rule that still fires on root-layout
+  `<link>` tags in the App Router); added a targeted `eslint-disable-next-line` with a one-line
+  rationale comment, matching the precedent set in the 1.3 approvals-page session for this exact
+  kind of unavoidable-but-correct lint warning.
+- `/` (`page.tsx` + `chat-form.tsx`) and `/approvals` (`page.tsx` + `approval-item.tsx`) restyled
+  into the Stitch card language (`rounded-xl` / `border-outline-variant` / `surface-container-*`
+  cards, `primary` buttons, badge/pill styling for status and approval-type) with all real data and
+  behavior kept as-is. Explicitly did **not** port the Stitch mockups' fictional content — the
+  dashboard mockup's "Live Activity" feed and "Needs Attention" panel (fake numbers, no backing
+  data source on this page) and the approvals mockup's two-column code-diff preview (a fictional
+  "Coding Agent PR" example with no matching data shape in this app) were left out; only the
+  shell/card visual language was adopted, not invented content.
+- Approvals page header now shows a real `"N Pending"` pill (`result.approvals.length`), not a
+  hardcoded mockup number.
+
+### Manual tests run
+- `npx tsc --noEmit`, `npm run lint` (0 errors, 0 warnings after the targeted eslint-disable),
+  `npm run build` — all clean; build output unchanged route list (`/`, `/approvals`,
+  `/api/voice/*`).
+- Playwright (headless Chromium, installed as a dev dependency already present from a prior
+  session, run via a temporary uncommitted script) against the live dev server at 1440px and
+  390px viewports: confirmed active-state highlighting swaps correctly between `/` and
+  `/approvals`, disabled nav items/Hire button render visibly muted, sidebar hides and the mobile
+  top bar appears below `md`, and the approvals empty state renders correctly. A live task
+  submission through the restyled chat form (`POST /v1/tasks` against the real running API) showed
+  the polled task card rendering `QUEUED` status correctly inside the new card styling (task didn't
+  reach a terminal status in the test window because no `arq` worker process happened to be running
+  at the time — unrelated to this UI-only change; not something this slice needed to fix).
+- `curl` smoke on both routes (200s) plus grep confirmed the new shell markup and no leftover
+  references to the old token names anywhere in `src/`.
+
+### Next recommended work
+1. Phase 1.4 — morning summary: consolidated overnight report; the new shell/nav primitives
+   (`AppShell`, `SidebarNav`) are ready for this and future Phase 2 pages to mount into directly.
+2. When Agents/Tasks/Billing/Settings pages actually ship, flip their `NAV_ITEMS` entries in
+   `sidebar-nav.tsx` from label-only to a real `href` — no other shell change needed.
+3. When auth/search/notifications land, revisit the "omit non-functional chrome" call for the top
+   header (currently mobile-logo-only) and wire the real search bar/notification bell/avatar.
+
+### Files / repos touched
+- `repos/orbicrew-web`: `src/app/globals.css`, `src/app/layout.tsx`, `src/app/page.tsx`,
+  `src/app/chat-form.tsx`, `src/app/approvals/page.tsx`, `src/app/approvals/approval-item.tsx`,
+  `src/components/sidebar-nav.tsx` (new), `src/components/app-shell.tsx` (new)
+- `docs/development/manual-test-guide.md`, `docs/development/phase_by_phase_development_plan.md`,
+  `docs/development/development-tracker.md` (this entry)
+
+---
+
+## 2026-08-07 — Plan update: Phase 1.3a added (Stitch UI design parity)
+
+**Agent / operator:** Claude Code
+**Scope:** `docs/development/phase_by_phase_development_plan.md` only (no code changes).
+
+User flagged that `orbicrew-web` (home page + `/approvals`) doesn't match the Stitch mockups in
+`resources/stitch_orbicrew_ui_ux_guide/` — those screens were consulted only loosely so far;
+pages were built functional-first (see the 1.3 entry below: "not the full sidebar nav shown in
+the Stitch mockup... explicitly out of scope for this slice"). That was a deliberate per-slice
+scope call, not an omission from the plan, but there was no dedicated tracked task to come back
+and do the visual pass — Phase 2's UI tasks (2.4/2.5/2.2) only cover *new* CRUD/settings/billing
+surfaces, not restyling what already exists.
+
+Added **Phase 1.3a — Web UI design parity with Stitch** to the plan, between 1.3 and 1.4:
+restyle the existing pages to the Stitch design language (sidebar nav shell, layout, typography,
+color, components) and land reusable layout/nav primitives so 1.4+ and Phase 2 pages start from
+that shell instead of bare markup. Sequenced before 1.4 (morning summary) so a third page doesn't
+land un-styled too. Also updated the "suggested immediate next slice" list. No code touched in
+this session.
+
+---
+
 ## 2026-08-07 — Phase 1.3: Approval gates (resolve the Phase 1.2 escalations)
 
 **Agent / operator:** Claude Code

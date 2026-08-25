@@ -25,7 +25,7 @@ gantt
     section Phase 1: Overnight + Multi-channel
     Task queue + checkpointing          :p1a, after p0f, 10d
     Budget guard hardening + whitelist  :p1b, after p1a, 8d
-    Morning summary report              :p1c, after p1b, 6d
+    Digest                               :p1c, after p1b, 6d
     Telegram adapter                    :p1d, after p1a, 8d
     WhatsApp adapter (+ verification)   :p1e, after p1d, 20d
     Research agent w/ real tools        :p1f, after p1b, 8d
@@ -74,12 +74,12 @@ gantt
 | Task queue + checkpointing | Redis + BullMQ/Celery, LangGraph state persistence for resumable long tasks | Phase 0 core |
 | Budget guard hardening | Per-tenant nightly aggregate cap (not just per-task), retry-then-escalate logic | Task queue |
 | Action whitelist + approval gates | Implement `approvals` table and flow end-to-end | Budget guard |
-| Morning summary report | Consolidated "what happened overnight" delivered via your preferred channel | Approval gates |
+| Digest | Consolidated "what happened since I last checked" report — not time-of-day-scoped; browsable history is just the same live query over an arbitrary past range, no scheduler | Approval gates |
 | Telegram adapter | First proof of the multi-channel adapter pattern from `05_api_design.md` Section 6 | Core API stable |
 | WhatsApp adapter | Higher priority for your target market, but factor in Business API verification lead time — start this early since it's a external dependency, not pure engineering time | Telegram adapter pattern proven |
 | Research agent with real tools | Web search + fetch tools wired in, tested against real research tasks | Phase 0 agents |
 
-**Exit criteria:** you can hand off a real project at night, wake up to a working morning summary, with at least one messaging channel (Telegram or WhatsApp) fully functional alongside the chat GUI.
+**Exit criteria:** you can hand off a real project unattended and check back to a working Digest of what happened, with at least one messaging channel (Telegram or WhatsApp) fully functional alongside the chat GUI.
 
 ---
 

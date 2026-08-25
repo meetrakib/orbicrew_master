@@ -245,7 +245,7 @@ flowchart TD
 This setting needs a companion rule for unattended execution, since "wait for a reply" doesn't make sense with nobody there to reply:
 
 - **A task explicitly flagged for overnight/unattended execution (`allow_overnight: true`, per `05_api_design.md` Section 4.2) automatically behaves as `always_proceed` for that run, regardless of the agent's configured default** — this isn't a separate setting to remember, it's a sensible automatic override, since a pending "awaiting input" task that nobody's there to answer would otherwise just sit idle all night, defeating the purpose.
-- **Every assumption made during an overnight run is logged in the `task_steps` audit trail and surfaced prominently in the morning summary** (per `03_system_design.md` Section 7's overnight execution flow) — so even though the agent didn't stop to ask, you see exactly what it assumed and why when you wake up, and can correct anything that guessed wrong. This is the same transparency principle as everywhere else in this system: proceeding on an assumption is fine, proceeding *silently* is not.
+- **Every assumption made during an overnight run is logged in the `task_steps` audit trail and surfaced prominently in the Digest** (per `03_system_design.md` Section 7's unattended execution flow) — so even though the agent didn't stop to ask, you see exactly what it assumed and why next time you check in, and can correct anything that guessed wrong. This is the same transparency principle as everywhere else in this system: proceeding on an assumption is fine, proceeding *silently* is not.
 - **If an ambiguity is genuinely blocking even for an overnight-flagged task** (e.g., truly cannot proceed without a decision only you can make, not just "would prefer to know"), it should fall through to the existing approval-queue mechanism (`06_security_and_scalability.md` Section 4) rather than either guessing dangerously or stalling — the same pattern already used for consequential actions, applied here to consequential *decisions*.
 
 ### 5.4 Schema and UI
@@ -265,7 +265,7 @@ ALTER TABLE agents ADD COLUMN clarification_mode TEXT NOT NULL DEFAULT 'ask_when
 │  ○ Always ask and wait for my input                              │
 │                                                                │
 │  ℹ Overnight/unattended tasks always proceed automatically —    │
-│    you'll see every assumption made in the morning summary.      │
+│    you'll see every assumption made in the Digest.               │
 └─────────────────────────────────────────────────────────┘
 ```
 

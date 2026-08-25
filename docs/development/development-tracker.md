@@ -6,6 +6,72 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-25 — Phase 1.8: Multi-provider cost-tier routing implemented (Groq/Cerebras/DeepInfra/OpenRouter registry) — Phase 1 exit criteria met
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 — task 1.8, the last remaining Phase 1 item (per the follow-up entry immediately below this one, which had already settled the tier→provider design).
+**Scope:** `repos/orbicrew-api` only.
+
+### Context
+Followed the phase plan's "suggested next slice" pointer straight to 1.8 — the design (tier→provider mapping, model choices) was already settled in the two entries below this one; this session did the implementation. Model catalogs/pricing at Groq, Cerebras, DeepInfra, and OpenRouter change often and sit past this agent's Jan-2026 knowledge cutoff (today is 2026-08-25), so exact model IDs and base URLs were verified live via WebFetch/WebSearch against each provider's own docs rather than assumed from memory (see [[feedback_verify_pricing_claims_live]]).
+
+### Done
+- **New `src/orbicrew_api/model_providers.py`** — the trivial/cheap-tier registry. All four providers (Groq, Cerebras, DeepInfra, OpenRouter) are OpenAI-compatible at the chat-completions surface, so unlike `research_tools.py`'s search registry (four genuinely different JSON shapes needing four bespoke classes), this is one `_call_provider` implementation reusing the `openai` SDK already a dependency for Phase 0.8 voice, with just a `base_url` + `api_key` swap per provider. `_PROVIDER_SPECS` maps a name to its settings key attribute, base_url, model ID, and per-token pricing; `_TIER_PROVIDER_ORDER` is a single flat order per tier — `trivial: (groq, cerebras, deepinfra, openrouter)` so a trivial task falls through into the cheap chain once its own free-tier providers are exhausted, `cheap: (deepinfra, openrouter)`. `complete_tier()` walks the order, skipping unconfigured providers and falling through to the next on *any* exception (same pattern as search), raising only if every configured provider in the chain fails.
+- **Live-verified model IDs/base URLs before writing code** (not from memory): Groq `https://api.groq.com/openai/v1`, model `openai/gpt-oss-20b` (confirmed free-tier, no card, via console.groq.com's docs + a corroborating pricing-aggregator search); Cerebras `https://api.cerebras.ai/v1`, model `gpt-oss-120b` (per inference-docs.cerebras.ai); DeepInfra `https://api.deepinfra.com/v1/openai`, model `deepseek-ai/DeepSeek-V4-Flash` at $0.09/$0.18 per MTok (per deepinfra.com/models — DeepSeek's model lineage advanced to V4 since the earlier V3-era pricing research in the entries below); OpenRouter `https://openrouter.ai/api/v1`, model `deepseek/deepseek-v4-flash` at $0.0679/$0.168 per MTok (per openrouter.ai's own model page). Groq/Cerebras priced at `(0, 0)` in the registry since both calls are made under their permanent free tiers.
+- **`src/orbicrew_api/llm_client.py`**: `complete()` gained a `tier` parameter. For `trivial`/`cheap`, it tries `model_providers.complete_tier()` first and falls back to calling Anthropic directly (the pre-existing behavior, `model` = `claude-haiku-4-5`) on any registry exception — including "no provider configured," so the system works completely unchanged with zero new `.env` keys. `mid`/`frontier` skip the registry entirely, unchanged from before. `CompletionResult` (and by inheritance `ResearchResult`) gained a `model_used: str` field holding the real `provider/model_id` string (e.g. `groq/openai/gpt-oss-20b`) or plain Anthropic model name that actually served the request — `complete_research()` is otherwise untouched and always calls Anthropic directly, since its tool-use loop uses Anthropic's tool-call schema and none of the four registry providers were evaluated against it.
+- **`src/orbicrew_api/office_manager.py`**: `_make_specialist_node`'s non-research branch now calls `complete(specialist_key, state["tier"], state["model"], state["input_text"])`, and the `specialist_execute` step's `model_used` detail now reads `result.model_used` (the real serving model) instead of blindly echoing `state["model"]` (the Model Router's pre-call tier label) — makes the fallback chain visible in the task's own step trace, same value the search registry already provides via its `result_summary`.
+- **`src/orbicrew_api/settings.py`**: added `groq_api_key`, `cerebras_api_key`, `deepinfra_api_key`, `openrouter_api_key` (all optional).
+- **Manual per-agent override intentionally not built**: the phase plan's original 1.8 description called for reusing `agents.model_mode`/`manual_model` (added in 1.4a) so a user could pin a specific agent to a specific provider+model. Checked first whether that's actually wireable — it isn't: `office_manager.py`'s specialist routing is still purely keyword-based (per its own comment since Phase 0.3, reaffirmed by `migrations/0005_agent_master_and_setting.sql`'s comment), with no join from a running task to a specific `agents` row at all. Building a "manual override" setting today would be a config field connected to nothing real — a half-finished implementation the CLAUDE.md principles explicitly call out to avoid. Deferred until task execution actually looks up a real agent row (likely alongside real per-agent task assignment, not scoped here).
+- **Tests**: new `tests/test_model_providers.py` (6 tests — first-configured-provider selection, fallthrough on error, trivial→cheap chain fallthrough, real cost computation for a paid provider, raises when nothing configured, raises after all configured providers fail) and 3 new tests in `tests/test_llm_client.py` (mid tier skips the registry entirely and calls Anthropic; cheap tier uses the registry when available and never touches Anthropic; trivial tier falls back to Anthropic when the registry raises). Updated existing `tests/test_office_manager.py` fakes to include the new required `model_used` field on `CompletionResult`/`ResearchResult`. 85 tests passing (76 before this session + 9 new), `uv run pytest`.
+- Updated `.env.example` (new provider keys, documented as fully optional with the fallback behavior spelled out), `README.md` (Phase 1.8 status paragraph + "Phase 1 exit criteria met" note), and `manual-test-guide.md` (new row 1.10, `Pending` — real Groq/Cerebras/DeepInfra/OpenRouter keys weren't in `.env` this session, so this is code-complete + unit-tested but not live-verified, the same honest status the WhatsApp adapter (1.7 in the guide) uses for its own external blocker).
+
+### Decisions / assumptions
+- Kept `model_router.py`'s `TIER_MODELS` completely unchanged — its `model` field for `trivial`/`cheap` (`claude-haiku-4-5`) now means specifically "the Anthropic fallback model," not "the model that will actually run." This kept the diff minimal and left the Budget Guard's pre-call cost estimates untouched (they were already conservative placeholders, not real per-provider figures).
+- `complete_tier()` raises rather than silently returning empty output when every provider fails — `llm_client.complete()` is the layer that decides "fall back to Anthropic," keeping the registry itself a dumb, swappable component (same separation as `research_tools.web_search()`, which also raises and lets its caller (`execute_tool`) decide what "failure" means for a tool-use turn).
+- DeepSeek's model lineage has moved to V4 since the design entries below this one were written assuming V3-era ("DeepSeek-class") naming — used the real current model ID rather than a stale one, since a wrong model ID would just 404 at request time.
+
+### Follow-ups
+- **Live verification pending real keys** — none of `GROQ_API_KEY`/`CEREBRAS_API_KEY`/`DEEPINFRA_API_KEY`/`OPENROUTER_API_KEY` were supplied this session. Once the user adds them to `.env`, verify per manual-test-guide.md row 1.10: real `trivial` task → `groq/openai/gpt-oss-20b`; real `cheap` task → `deepinfra/deepseek-ai/DeepSeek-V4-Flash`; a forced Groq auth failure falling through to a real Cerebras call; and confirm zero-key behavior still works (already true by construction, but worth confirming live once, the same way the search registry's fallback was proven against a real forced failure).
+- Manual per-agent provider/model override remains a real gap in the phase plan's original 1.8 scope — revisit once task execution is linked to a specific `agents` row.
+- **Phase 1 exit criteria are now met** — all tasks done except 1.6 (WhatsApp, blocked externally on Meta business verification) and 1.10's live-key verification (polish, not a gap). Phase 2 (multi-tenancy & pricing) is the next real engineering decision point, but that's the user's call, not something to start unprompted.
+
+### Files / repos touched
+- `repos/orbicrew-api`: `src/orbicrew_api/model_providers.py` (new), `src/orbicrew_api/llm_client.py`, `src/orbicrew_api/office_manager.py`, `src/orbicrew_api/settings.py`, `tests/test_model_providers.py` (new), `tests/test_llm_client.py`, `tests/test_office_manager.py`, `.env.example`, `README.md`
+- `docs/development/`: `phase_by_phase_development_plan.md` (1.8 row, Phase 1 exit criteria, next-slice list), `manual-test-guide.md` (new row 1.10), `development-tracker.md` (this entry)
+
+---
+
+## 2026-08-25 — Follow-up: Task 1.8's tier→provider mapping refined — direct-Anthropic for mid/frontier, DeepInfra→OpenRouter for cheap, Groq→Cerebras free tiers for trivial only
+
+**Agent / operator:** Claude Code
+**Phase:** Plan/docs only, revises task 1.8 further from the "widened to multi-provider registry" entry below (same day); no application code touched — 1.8 is still Pending.
+**Scope:** `docs/leangine-office-docs/tech/03_system_design.md`, `docs/leangine-office-docs/tech/13_byo_provider_architecture.md`, `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md`.
+
+### Context
+User asked, across a separate side conversation, whether free-tier LLM providers (Cerebras, Groq, Gemini, OpenRouter free models, Cloudflare Workers AI, Mistral) could be blended with paid Claude to cut cost without hurting output — and then, once told free tiers only cover providers' own open-weight models (nobody gives away Claude), asked to compare DeepInfra vs. OpenRouter directly and pick one.
+
+Live research (WebFetch/WebSearch against current docs, not memory — see [[feedback_verify_pricing_claims_live]]) surfaced two things that revise the entry immediately below this one:
+1. **DeepInfra's Claude Sonnet 5 price ($2/$10 per MTok) is not a discount off Anthropic's list price — it matches Anthropic's own current *intro* rate** (Sonnet 5 is $2/$10 through 2026-08-31, reverting to $3/$15 after). OpenRouter states the same thing explicitly for itself ("you pay the same rate as you would directly with the provider"). Neither aggregator can underprice Claude since neither controls the weights — Anthropic direct is the actual price floor, and it retains prompt caching / other first-party features a pass-through proxy may not fully support.
+2. Cerebras's free tier caps context at 8,192 tokens (not previously verified); Gemini's free tier trains on submitted content per Google's own policy — ruled out entirely, even for trivial-tier traffic, once real task content (not just testing) flows through it.
+
+### Done
+- Revised the `mid`/`frontier` tiers to route **direct to Anthropic**, not through the DeepInfra/OpenRouter registry — no cost benefit to the proxy hop, real feature cost.
+- Revised `trivial`/`cheap` provider ordering: `trivial` tries **Groq → Cerebras** (both permanent, no-card free tiers) before falling through to `cheap`, which tries **DeepInfra → OpenRouter** for open-weight models (DeepInfra cheapest per-model with no credit-purchase fee; OpenRouter's value there is its own internal multi-host fallback for the same model, not price). Gemini excluded from the registry entirely.
+- Updated `03_system_design.md` §6's flowchart node labels and added a new §6.1 spelling out the per-tier provider order and the reasoning above.
+- Updated `13_byo_provider_architecture.md` §0 to match (and flagged the earlier "$2/$10 is cheaper than Anthropic" framing as imprecise — it's parity with the intro price, not a real discount).
+- Updated `phase_by_phase_development_plan.md`: task 1.8 row, and next-steps items 15 and 19.
+
+### Follow-ups
+- Task 1.8 implementation is still **Pending** — needs DeepInfra, OpenRouter, Groq, and Cerebras keys in `.env` before work starts (Anthropic key already exists from Phase 0).
+- Worth re-checking DeepInfra's Sonnet 5 price after 2026-08-31 when Anthropic's own intro pricing expires — if DeepInfra doesn't also reprice, it could become a genuine (small) discount rather than parity; not worth acting on until then.
+- Estimated impact of the free-tier `trivial` addition is modest at solo-use volume — roughly $5–15/mo out of a $40–100/mo total LLM bill (per `02_cost_and_pricing.md`'s moderate-use estimate), since trivial tasks are already cheap on Haiku. Worth having since it's ~free to add given the registry pattern already exists, but not a scaling strategy — free-tier rate limits are per-API-key/org, not per-tenant, so this doesn't extend past single-user Phase 0/1 usage.
+
+### Files / repos touched
+- `docs/leangine-office-docs/tech/03_system_design.md`, `docs/leangine-office-docs/tech/13_byo_provider_architecture.md`
+- `docs/development/phase_by_phase_development_plan.md`, `docs/development/development-tracker.md` (this entry)
+
+---
+
 ## 2026-08-25 — Phase 1.7 follow-up: Research Agent search widened to a 6-provider registry with auto fallback + manual pin
 
 **Agent / operator:** Claude Code

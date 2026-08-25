@@ -6,6 +6,37 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-25 — Follow-up: OpenAI provider fixed — max_completion_tokens + a worse hidden-reasoning-token bug ($0.12 spent on zero output)
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 — task 1.8, continuing the redesign entry immediately below (same day, same session).
+**Scope:** `repos/orbicrew-api` only.
+
+### Context
+After reporting the redesign, the user asked to clarify what "Claude Code API" meant (they meant the already-existing metered Anthropic API key, not the subscription-auth concern raised earlier — that's resolved, no code change needed) and asked directly whether Anthropic and OpenAI both still work as providers. Anthropic: yes, unchanged, verified earlier in the session. OpenAI: had never actually been live-tested this session (only Anthropic/DeepInfra/OpenRouter were) — tested it now using the `OPENAI_API_KEY` already in `.env` from the Phase 0.8 voice feature.
+
+### Done
+- **Found bug #1 live**: OpenAI's current models reject the `max_tokens` chat-completions parameter outright (`400 — "Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead."`). Verified `max_completion_tokens` works identically across OpenAI, DeepInfra, and OpenRouter (all three accept it, real calls succeed), so `model_providers.complete()` now sends `max_completion_tokens` uniformly instead of `max_tokens` for all three OpenAI-compatible providers.
+- **Found bug #2 live, more serious**: after fixing bug #1, `gpt-5.6-sol` (OpenAI's frontier-tier model) still returned **empty content** on the exact same hard prompt that first surfaced the DeepInfra reasoning-token issue (see entry below) — but worse: `usage.completion_tokens_details.reasoning_tokens: 4096` showed the model's *entire* 4096-token budget went to OpenAI's internal (non-visible, no `reasoning_content` field at all — fully opaque) reasoning, for a real `$0.123085` charge and zero output. Confirmed this isn't just "not enough tokens": tried `reasoning_effort="low"` and `"medium"` (OpenAI's own documented lever for this) — both *still* consumed the full budget on reasoning. Only `reasoning_effort="none"` fixed it, producing 17,044 real characters of answer on the identical prompt and token budget.
+- **Root-cause fix, not a bigger cap**: added `_ProviderSpec.extra_create_kwargs: dict` (via `field(default_factory=dict)`), merged into every `chat.completions.create()` call for that provider. OpenAI's spec now sets `{"reasoning_effort": "none"}`. Also re-examined DeepInfra's frontier bug (raising `MAX_TOKENS` to 4096, from the entry below, was a real but partial fix — it worked at 4096 for that specific prompt, but the OpenAI case proves a bigger cap alone isn't reliable against a sufficiently hard prompt) and applied the equivalent root-cause fix there too: DeepInfra's spec sets `extra_body={"chat_template_kwargs": {"enable_thinking": False}}`, the standard way to disable "thinking" mode on Qwen-family chat templates. Live-verified this is a harmless no-op on DeepSeek-V4-Flash/Pro-0813 (the models already used for `cheap`/`mid`, never affected by the reasoning issue) — same output either way.
+- **Re-ran the original failing prompt against all three affected models post-fix** to confirm the root-cause fix, not just the isolated `reasoning_effort`/`enable_thinking` flag tests: `openai/gpt-5.6-sol` → 17,044 chars (was 0, $0.123 either way — the fix doesn't reduce cost for this model, it makes the cost produce something); `deepinfra/Qwen3.5-397B-A17B` → 10,763 chars at $0.0083 (down from needing the full 4096-token cap to produce output, and cheaper since it now stops before hitting the cap); `deepinfra/DeepSeek-V4-Pro-0813` → 12,687 chars, confirmed unaffected/still fine.
+- Tests still pass unchanged (94/94) — the mocked test doubles don't assert on the exact kwargs passed to `create()`, so no test file changes were needed for this follow-up; the fix was verified entirely via real API calls, matching how the original bug was found.
+- Updated `README.md` and `manual-test-guide.md` (row 1.10) with the second bug and its fix; this tracker entry.
+
+### Decisions / assumptions
+- Chose to disable reasoning entirely (`"none"` / `enable_thinking: False`) rather than tune it down, after confirming `"low"`/`"medium"` reasoning_effort on OpenAI still fully consumed the budget — for Orbicrew's current use case (one bounded task response, not an extended agentic reasoning trace the user reads), a model that reliably answers within budget is more valuable than one that reasons more but might not answer at all. This trades away some potential quality gain from reasoning for reliability — worth revisiting if a specific tier's task quality turns out to suffer once there's real usage data to judge by (per the phase plan's "exit criteria are usage-based" principle).
+- Did not add a defensive "raise if content comes back empty" safety net on top of the root-cause fix — the fix addresses the actual cause for both providers found so far; adding speculative defensive code for a hypothetical third instance would be scope creep against a problem not yet observed elsewhere (OpenRouter's current models weren't affected, per the redesign entry below).
+
+### Follow-ups
+- If OpenRouter's tier catalog ever changes to route through a hybrid-reasoning model (it currently doesn't — see the redesign entry below), the same `extra_create_kwargs` mechanism is already in place to fix it the same way, no new fix pattern needed.
+- Worth periodically re-testing whether OpenAI's reasoning-token behavior changes for gpt-5.6-family models via provider updates, since this is exactly the kind of thing that shifts as providers iterate — not urgent, just a note for future upgrades.
+
+### Files / repos touched
+- `repos/orbicrew-api`: `src/orbicrew_api/model_providers.py`
+- `docs/development/`: `manual-test-guide.md` (row 1.10 extended), `development-tracker.md` (this entry); README.md update pending in the same commit as the redesign below
+
+---
+
 ## 2026-08-25 — Follow-up: Task 1.8 redesigned into a single active-provider switch (same day as first shipped), live-verified against real DeepInfra/OpenRouter, MAX_TOKENS bug found and fixed
 
 **Agent / operator:** Claude Code

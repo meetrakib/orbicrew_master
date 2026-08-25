@@ -6,6 +6,36 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-25 — Phase 1.6: WhatsApp adapter built, blocked on Meta business verification
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 (Overnight autonomy + multi-channel) — task 1.6
+**Scope:** `repos/orbicrew-channels` only (new `whatsapp/` package alongside the existing `telegram/` one).
+
+### Context
+Same session as 1.5 (Telegram). User asked to continue straight into WhatsApp. Unlike Telegram, Meta's WhatsApp Cloud API delivers inbound messages via a webhook (an HTTPS POST Meta makes to a URL you register), not polling — so this adapter had to be a small HTTP server, not a bot loop. User has a Cloudflare Tunnel already set up for `meetrakib.com` with per-port subdomains (`dev-8000.meetrakib.com`, `dev-3000.meetrakib.com`, etc.), so the plan was: build the webhook server on a new port (`8081`), the user points a new tunnel hostname at it, registers that URL with Meta.
+
+Got partway through Meta's setup with the user (developers.facebook.com → Create App → Business type → add WhatsApp product) before hitting a hard stop: Meta requires **business verification** before issuing a real Phone Number ID / access token, and that verification requires an incorporated business, which the user doesn't have yet. This is exactly the lead-time risk the phase plan's own 1.6 row already flagged ("start early, external lead time") — confirmed correct, not avoidable. Explicit decision: build and unit-test the adapter now, defer live verification until the business is incorporated and Meta's verification clears, rather than blocking all WhatsApp work on that external process.
+
+### Done
+- New `src/orbicrew_channels/whatsapp/` package: `client.py` (`WhatsAppClient` — thin wrapper over the Graph API's `POST /{phone_number_id}/messages`, no message-edit endpoint exists for text messages unlike Telegram's `editMessageText`, so status updates are separate sends: an ack, then a final result); `webhook.py` (`parse_inbound_messages` — extracts text messages from Meta's webhook payload shape, ignoring status-update change events and non-text message types; `verify_signature` — HMAC-SHA256 check against Meta's `X-Hub-Signature-256` header using the app secret, so a spoofed POST to the now-public webhook URL is rejected); `app.py` (FastAPI app — `GET /webhook` does Meta's verification handshake against `WHATSAPP_WEBHOOK_VERIFY_TOKEN`, `POST /webhook` verifies the signature then dispatches each message as a fire-and-forget `asyncio.create_task` so the handler ack's Meta quickly rather than blocking on up to `TASK_POLL_TIMEOUT_SECONDS` of polling); `formatting.py` (mirrors the Telegram one). Approvals use plain-text commands (`approve <id>` / `reject <id>`, `/approvals` to list) rather than Cloud API's interactive-button messages — kept out of scope for this first slice, same "thin adapter" philosophy as Telegram.
+- Reused `OrbicrewApiClient` from `api_client.py` unchanged (it was already channel-agnostic) — only `channel="whatsapp"` differs from the Telegram call site.
+- Same personal-use scope decision as Telegram, made consistently without re-litigating it: gated to a single `WHATSAPP_ALLOWED_PHONE_NUMBER`, since `orbicrew-api` still has zero multi-tenant auth. Documented identically in both `.env.example` and the README.
+- `settings.py` extended with `whatsapp_access_token`, `whatsapp_phone_number_id`, `whatsapp_app_secret`, `whatsapp_webhook_verify_token`, `whatsapp_allowed_phone_number`, `whatsapp_webhook_port` (default `8081`, chosen to avoid colliding with `orbicrew-api`'s 8000 or `orbicrew-web`'s 3000). New `orbicrew-whatsapp` project script (`uvicorn`-served).
+- **Tests** (34/34 passing across the whole `orbicrew-channels` suite, up from 15): `test_whatsapp_webhook.py` (payload parsing incl. ignoring status/non-text events, signature verify correct/wrong/missing), `test_whatsapp_handlers.py` (submit→ack→poll→deliver, submit-error path, poll timeout, approvals list empty/populated, approve/reject incl. API-error path — same granularity as the Telegram handler tests), `test_whatsapp_app.py` (FastAPI route tests over `httpx.ASGITransport`: webhook verification success/wrong-token, signature-rejection returning 401, and — via a `monkeypatch` on `asyncio.create_task` that captures the dispatch coroutine instead of scheduling it, so the test can `await` it directly rather than racing a real background task — full dispatch from an allowed number and correct silent drop for a disallowed one).
+- README updated with full WhatsApp setup steps (Meta app creation → API Setup page → `.env` fields → run → expose via tunnel → register webhook).
+
+### Follow-ups
+- **Live verification blocked** — cannot get a real `WHATSAPP_PHONE_NUMBER_ID`/access token until Meta's business verification clears, which needs the user's business incorporated first. Nothing to do here until that external process completes; revisit then (register the Cloudflare Tunnel hostname for port 8081, get real Meta credentials, walk the live round trip the same way Telegram's was verified).
+- Cross-channel continuity (manual-test-guide 1.6/tracker note from the Telegram entry) still unverified for either channel.
+- No interactive-button approvals for WhatsApp (text-command only) — could add later using Cloud API's interactive message type if the plain-text UX proves clunky.
+
+### Files / repos touched
+- `repos/orbicrew-channels`: `src/orbicrew_channels/settings.py`, `pyproject.toml`, `uv.lock`, `.env.example`, `README.md`; new `src/orbicrew_channels/whatsapp/` (`__init__.py`, `app.py`, `client.py`, `formatting.py`, `main.py`, `webhook.py`); new `tests/test_whatsapp_{app,handlers,webhook}.py`
+- `docs/development/`: `phase_by_phase_development_plan.md` (1.6 row), `manual-test-guide.md` (1.7 row), `development-tracker.md` (this entry)
+
+---
+
 ## 2026-08-25 — Phase 1.5: Telegram adapter (personal-use slice), plus committing a backlog of already-"Done" uncommitted work
 
 **Agent / operator:** Claude Code

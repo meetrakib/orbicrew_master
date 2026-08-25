@@ -184,10 +184,10 @@ flowchart TD
     Cache -->|No| Classify["Cheap classifier model<br/>(Haiku-tier)"]
     UseCache --> Classify
     Classify --> Complexity{"Task complexity?"}
-    Complexity -->|"Trivial<br/>(simple formatting, short lookups)"| Free["Free/near-free tier<br/>(free OpenRouter models where quality allows)"]
-    Complexity -->|"Simple<br/>(formatting, short Q&A, captions)"| Cheap["Cheap tier<br/>(Haiku / mini models)"]
-    Complexity -->|"Moderate<br/>(drafting, research synthesis)"| Mid["Mid tier<br/>(Sonnet-class)"]
-    Complexity -->|"Hard<br/>(architecture, debugging, brand strategy, final polish)"| Frontier["Frontier tier<br/>(Opus/Fable/GPT-5.6 Terra)"]
+    Complexity -->|"Trivial<br/>(simple formatting, short lookups)"| Free["Trivial tier<br/>(active provider's cheapest model)"]
+    Complexity -->|"Simple<br/>(formatting, short Q&A, captions)"| Cheap["Cheap tier<br/>(active provider's cheap-tier model)"]
+    Complexity -->|"Moderate<br/>(drafting, research synthesis)"| Mid["Mid tier<br/>(active provider's mid-tier model)"]
+    Complexity -->|"Hard<br/>(architecture, debugging, brand strategy, final polish)"| Frontier["Frontier tier<br/>(active provider's frontier model)"]
     Free --> Budget{"Within budget cap?"}
     Cheap --> Budget
     Mid --> Budget
@@ -201,6 +201,16 @@ flowchart TD
     Retry --> Success
     EscalateUp --> Budget
 ```
+
+### 6.1 Provider selection (Phase 1.8, redesigned 2026-08-25)
+
+**Superseded design note:** an earlier version of this section (and an earlier shipped version of the code) described a per-tier auto-fallback registry — Groq→Cerebras for `trivial`, DeepInfra→OpenRouter for `cheap`, `mid`/`frontier` hardcoded to direct Anthropic. That was replaced the same day it first shipped, at explicit user request, once real usage clarified the actual driver: "I hold credits in different provider accounts and want to choose which one gets spent," not pure cost-arbitrage across providers. This section now describes the design that actually shipped.
+
+**A single global setting, `MODEL_PROVIDER`, picks one active provider — `anthropic`, `openai`, `openrouter`, or `deepinfra` — that serves every tier (trivial through frontier) from its own model catalog.** Whichever provider is active, tier classification still runs the same way (the flow above), but the resulting tier maps to that one provider's own model for that tier — there is no cross-provider fallback chain and no per-tier provider mixing. `MODEL_PROVIDER_MANUAL_MODEL` optionally pins one exact model for every tier on the active provider, overriding its tier catalog; per-agent overrides (`manual_model`) can pin further, but only take effect for the currently active provider.
+
+A failed model call is a real failure that flows into the existing retry-then-escalate path (§7's Budget Guard/approval flow) — it does **not** silently fall back to a different provider than the one the user explicitly selected, since that could spend money on an account they didn't intend to touch.
+
+Groq and Cerebras were evaluated for the earlier per-tier design (permanent no-card free tiers) but are excluded from `MODEL_PROVIDER`'s valid values — neither hosts a mid/frontier-class model, so neither can coherently serve "every tier" the way this design requires. Their settings keys remain in the codebase, unused, for a possible future revisit. Gemini's free tier was separately evaluated and rejected outright for any tier: Google states free-tier content is used to improve their products, which isn't an acceptable trade for real task content.
 
 ---
 

@@ -139,7 +139,7 @@ Living checklist of **manual** verification steps. Automated tests live in each 
 
 | # | Check | Expected | Status |
 |---|---|---|---|
-| 2.1 | Tenant isolation | Tenant A cannot read Tenant B data/tasks/memory | Pending |
+| 2.1 | Tenant isolation | Sign up two tenants via `orbicrew-web` (`/signup`); submit a task under Tenant A; Tenant B's `GET /v1/tasks/:id` for that task is a real 404 (not just filtered out client-side), Tenant B's dashboard shows zero cross-visibility; an unauthenticated request to any tenant-scoped endpoint gets 401; connecting to Postgres directly as the restricted `orbicrew_app` role (not the app's usual superuser role) with `app.current_tenant_id` set to Tenant A can only ever `SELECT` Tenant A's rows, even with a query that omits a `tenant_id` filter entirely — proving RLS is enforced by Postgres itself, not just application-layer filtering | Pass (2026-08-25) — live-verified at both layers: (1) direct SQL as `orbicrew_app` with `app.current_tenant_id` set to two different real tenant ids returned only that tenant's row from `tenants` each time, while the superuser role (migrations/worker) still saw all rows; (2) real HTTP flow — signed up two tenants through `POST /v1/auth/signup`, submitted a task as Tenant A, confirmed Tenant B's `GET /v1/tasks/:id` on it returns 404 and Tenant B's `GET /v1/dashboard/summary` shows `active_tasks: 0`; confirmed the pre-existing local "Founder Workspace" dev tenant's task/agent history is still reachable via `POST /v1/auth/login` with the seeded dev password (`DEV_SEED_PASSWORD`) rather than orphaned; browser end-to-end (Playwright) through `orbicrew-web`: signup → real dashboard (shown scoped to the new empty tenant) → account menu shows the real signed-up email → logout → login again, all passing with zero console errors |
 | 2.2 | Project isolation | Two projects under one tenant do not cross-contaminate context | Pending |
 | 2.3 | Billing meters | Usage increments correctly; tier limits enforce | Pending |
 | 2.4 | BYO keys | Tenant key used when billing_mode=byo; never logged in plaintext | Pending |
@@ -171,6 +171,7 @@ Add dated notes when a manual bug is found in the wild:
 
 | Date | Change |
 |---|---|
+| 2026-08-25 | 2.1 marked Pass — Tenant model + real Postgres RLS (Phase 2.1) verified live at both the direct-SQL and full-HTTP-API layers, plus a Playwright browser pass of `orbicrew-web`'s signup/login/logout |
 | 2026-08-07 | 1.4 renamed "Morning summary" → Digest (not time-of-day-scoped); a scheduled-generation + custom-delivery-time approach was built, then reverted the same day (unnecessary background job, no delivery channel to use it) in favor of history-as-a-live-date-range-query — see tracker |
 | 2026-08-07 | 1.4 marked Pass — Morning summary (`GET`/`POST /v1/dashboard/morning-summary*` + `orbicrew-web` `/summary` page) verified live |
 | 2026-08-07 | 1.3 replaced with 1.3a/1.3b/1.3c (approve/reject/conflict for the approvals resolve flow), all Pass |

@@ -6,6 +6,47 @@ Newest entries at the **top**.
 
 ---
 
+## 2026-08-25 — Phase 1.7 follow-up: Research Agent search widened to a 6-provider registry with auto fallback + manual pin
+
+**Agent / operator:** Claude Code
+**Phase:** Phase 1 — same day, same session as the Phase 1.7 entry below; extends it rather than replacing it.
+**Scope:** `repos/orbicrew-api` only.
+
+### Context
+Right after Tavily-only Phase 1.7 shipped and was verified live, the user asked whether creating multiple accounts on the same search provider (Tavily/Brave/Firecrawl) to pool free credits was viable. Declined to build that — it's the exact behavior these providers' terms of service watch for (Brave's own stated reason for adding a credit-card requirement is "an anti-fraud measure to protect Brave from bad actors who want to abuse their API"), and it's a bad foundation for a product meant to run reliably unattended. Redirected instead toward legitimately using *different* providers' real free tiers, which the existing `SearchProvider` abstraction was already built for.
+
+The user had independently found and created accounts on **Serper** and **Linkup**, prompting a request to research what else was out there. First pass surfaced Exa, Parallel Search, and SerpAPI too (with Google Custom Search flagged as a dead end — closed to new signups, shutting down January 2027). The user then caught that several of these free tiers were one-time signup grants, not recurring — asked specifically for providers with *monthly recurring* free credits. Re-verified each with live `WebFetch`/`WebSearch` calls: Serper's 2,500 credits turned out to be one-time (prepaid pack, no auto-renewal, 6-month expiry) and got dropped; Tavily (1,000/mo), Linkup (~4,000/mo via a $20 credit that refills monthly), Parallel (5,000/mo), Exa (~1,400/mo via a $10 credit that refills monthly, card requirement dropped July 2026), SerpAPI (100–250/mo, sources disagree on the exact figure), and Brave (~1,000/mo via a $5 credit, requires a card) all confirmed recurring.
+
+The user then created accounts on all six (Tavily, Linkup, Parallel, Exa, SerpAPI, Brave) and asked for a real implementation: search using all of them, auto-fallback to the next when one's credit limit is hit, and the ability to manually pin a specific provider — explicitly the same shape already sketched for Phase 1.8's model-provider registry, just applied to search.
+
+### Done
+- **Verified each provider's real API contract before writing code** (auth header format, endpoint, request/response field names) via live doc fetches — Linkup (`POST api.linkup.so/v1/search`, Bearer auth, `results[].{name,url,content}`), Parallel (`POST api.parallel.ai/v1/search`, `x-api-key` header, `search_queries` array + `mode`, `results[].{title,url,excerpts[]}`), Exa (`POST api.exa.ai/search`, `x-api-key` header, `results[].{title,url,text}`), SerpAPI (`GET serpapi.com/search`, key as a query param, `organic_results[].{title,link,snippet}`), Brave (`GET api.search.brave.com/res/v1/web/search`, `X-Subscription-Token` header, `web.results[].{title,url,description}`).
+- **`src/orbicrew_api/research_tools.py`**: added `LinkupSearchProvider`, `ParallelSearchProvider`, `ExaSearchProvider`, `SerpApiSearchProvider`, `BraveSearchProvider` alongside the existing `TavilySearchProvider`, each normalizing to the same `{title, url, snippet}` shape. New `_PROVIDER_CLASSES` registry (name → class + settings key attribute) and `_build_registry()` instantiate whichever providers have a key configured. `web_search()` now returns `(provider_name, results)` instead of just `results`, and branches on `settings.search_provider_mode`: **auto** (default) walks a fixed priority order (`tavily, linkup, parallel, exa, serpapi, brave` — roughly largest real monthly free allowance and LLM-search fit first) and falls through to the next configured provider on *any* exception; **manual** (`search_provider_manual` names one) always uses that one, no fallback. Deliberately did not try to distinguish "quota exhausted" from other failure types — a bad key, an outage, and a 429 all just raise, and auto mode treats them identically, which is simpler and covers the actual ask ("once one provider credit limit reaches it should try next") as a special case of "on any error, try next."
+- **`src/orbicrew_api/settings.py`**: added `linkup_api_key`, `parallel_api_key`, `exa_api_key`, `serpapi_api_key`, `brave_api_key`, `search_provider_mode` (`Literal["auto", "manual"]`, default `"auto"`), `search_provider_manual`.
+- **`execute_tool`'s success summary now names which provider served the search** (e.g. `"5 result(s) for 'query' via linkup"`) — shows up directly in the task's `tool_call` step detail, useful for seeing the fallback chain in action from the task history alone.
+- **User supplied real keys mid-session** for Tavily (already had it), Linkup, Parallel, Exa, and Brave (SerpAPI's wasn't provided, left unset — auto mode just skips it). One key arrived mislabeled "orbicrew api"; based on its UUID shape matching Linkup's dashboard key format, assigned it to `LINKUP_API_KEY` and flagged the guess in both the `.env` comment and to the user — confirmed correct once tested live (see below). All added to `.env` (gitignored, never committed).
+- **Tests**: `test_research_tools.py` rewritten — one request/response-shape test per provider (6), registry/fallback tests (no-provider-configured raises, auto mode falls through to the next provider on a simulated error, all-providers-failing raises with the last error, manual mode uses only the named provider and does *not* fall back on failure, manual mode with an unconfigured name raises), plus the pre-existing `web_fetch`/`execute_tool` dispatch tests carried over. 18 tests in this file now (up from 9), 76 passing across the whole suite.
+
+### Live verification (real API calls, not mocked)
+Restarted `orbicrew-api` + the `arq` worker (again needed to pick up new `.env` vars). Ran three checks directly against the real code path (`research_tools` functions called from a throwaway script, faster than round-tripping through the task queue for exploratory checks):
+1. Each of the 5 configured providers' `.search()` called directly — all returned real results for "current CEO of Anthropic" except `serpapi` (correctly skipped, no key). This is what confirmed the mislabeled "orbicrew api" key really was a working Linkup key.
+2. `web_search()` in auto mode — picked `tavily` first, as the priority order predicts.
+3. **Forced a real Tavily failure** (patched settings in-process to an invalid Tavily key, left the rest real) and called `web_search()` — it made a real failing call to Tavily, caught the exception, and fell through to a real, successful Linkup call. This is the actual behavior the user asked for, proven against live APIs rather than inferred from unit tests.
+
+Then one full task through the real API/worker/checkpointer pipeline ("research and compare current pricing for Linkup, Parallel, and Exa search, cite your sources"): classified `research`, ran 3× `web_search` + 3× `web_fetch` (all via `tavily`, since it didn't fail this time), output correctly cited real fetched pricing pages for all three providers, `$0.0235` real spend. Both temporary processes stopped afterward, same cleanup pattern as every other live-verification session.
+
+### Follow-ups
+- SerpAPI has no key configured yet — user has an account but didn't paste that key this session. Auto mode already tolerates this (skips unconfigured providers); add the key to `.env` whenever convenient, no code change needed.
+- No settings UI exists for switching `SEARCH_PROVIDER_MODE`/`SEARCH_PROVIDER_MANUAL` — it's an env var today, same scope level as how model-tier routing has no UI either. Revisit if/when Phase 2's tenant settings UI covers this kind of configuration generally.
+- Manual-mode provider pinning was unit-tested but not exercised against a real provider live this session.
+- Remaining Phase 1 item: 1.8 (multi-provider **model** cost-tier routing — DeepInfra + OpenRouter registry; unrelated to this search-provider work beyond sharing the same registry *pattern*).
+
+### Files / repos touched
+- `repos/orbicrew-api`: `src/orbicrew_api/research_tools.py`, `src/orbicrew_api/settings.py`, `tests/test_research_tools.py`, `.env.example`, `README.md`; `.env` (gitignored, not committed) gained `LINKUP_API_KEY`, `PARALLEL_API_KEY`, `EXA_API_KEY`, `SERPAPI_API_KEY` (empty), `BRAVE_API_KEY`, `SEARCH_PROVIDER_MODE`, `SEARCH_PROVIDER_MANUAL`
+- `docs/development/`: `phase_by_phase_development_plan.md` (1.7 row updated), `manual-test-guide.md` (new 1.9 row), `development-tracker.md` (this entry)
+
+---
+
 ## 2026-08-25 — Phase 1.7: Research Agent gets real web_search/web_fetch tools
 
 **Agent / operator:** Claude Code
